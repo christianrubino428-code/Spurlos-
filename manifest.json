@@ -1,0 +1,33 @@
+{
+  "id": "spurlos-akten-generator",
+  "name": "SPURLOS · Akten-Generator",
+  "short_name": "SPURLOS",
+  "description": "True-Crime-Shorts-Produktion: Fall wählen, Video generieren, hochladen.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0D10",
+  "theme_color": "#0B0D10",
+  "categories": ["entertainment", "productivity", "video"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "shortcuts": [
+    {
+      "name": "Fall produzieren",
+      "short_name": "Produzieren",
+      "description": "Direkt zum Produzieren-Bereich springen",
+      "url": "./index.html?action=produce",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "System-Check",
+      "short_name": "System-Check",
+      "description": "API-Schlüssel und Verbindungen prüfen",
+      "url": "./index.html?action=audit",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}
