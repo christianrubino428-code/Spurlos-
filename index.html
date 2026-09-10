@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0B0D10">
+<title>SPURLOS · Akten-Generator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --ink:#0B0D10;
+  --panel:#14181D;
+  --panel2:#181D23;
+  --line:#242B33;
+  --paper:#E9E4D8;
+  --dim:#7E8894;
+  --stamp:#C42B1C;
+  --stamp-dim:rgba(196,43,28,.14);
+  --ok:#4C9A6B;
+  --mono:ui-monospace,'SF Mono','Roboto Mono',Menlo,monospace;
+  --disp:'Special Elite',var(--mono);
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);color:var(--paper);font-family:var(--sans);
+  font-size:15px;line-height:1.55;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  background-image:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(196,43,28,.06),transparent 60%);
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+
+/* ---------- Header ---------- */
+header{padding:26px 0 10px;text-align:center}
+.brand{font-family:var(--disp);font-size:34px;letter-spacing:.14em;color:var(--paper)}
+.brand b{color:var(--stamp);font-weight:400}
+.brand-sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;margin-top:4px}
+.brand-rule{display:flex;align-items:center;gap:10px;margin:14px 0 4px;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.2em}
+.brand-rule::before,.brand-rule::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- Akte / Sections ---------- */
+section{margin:18px 0}
+.sec-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase;margin:0 2px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.sec-label .tag{color:var(--stamp);letter-spacing:.1em}
+
+.akte{
+  position:relative;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:16px 16px 16px 26px;overflow:hidden;
+}
+/* perforierte Aktenkante */
+.akte::before{
+  content:"";position:absolute;left:8px;top:0;bottom:0;width:4px;
+  background-image:radial-gradient(circle 2px,var(--ink) 2px,transparent 2.5px);
+  background-size:4px 14px;background-repeat:repeat-y;opacity:.9;
+}
+.akte-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.akte-nr{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.14em}
+.akte-name{font-family:var(--disp);font-size:21px;line-height:1.25;margin:2px 0 2px}
+.akte-meta{font-family:var(--mono);font-size:11.5px;color:var(--dim);letter-spacing:.06em}
+.stamp{
+  font-family:var(--disp);color:var(--stamp);border:2.5px solid var(--stamp);
+  border-radius:5px;padding:4px 10px 2px;font-size:14px;letter-spacing:.2em;
+  transform:rotate(6deg);opacity:.92;white-space:nowrap;flex:none;
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Crect width='80' height='40' fill='white'/%3E%3C/svg%3E");
+}
+.fakten{list-style:none;margin-top:10px}
+.fakten li{
+  position:relative;padding:5px 0 5px 18px;font-size:13.5px;color:#C9C4B8;
+  border-top:1px dashed var(--line);
+}
+.fakten li:first-child{border-top:0}
+.fakten li::before{content:"›";position:absolute;left:2px;color:var(--stamp);font-family:var(--mono)}
+
+/* ---------- Controls ---------- */
+select,input[type=text],input[type=password]{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--paper);
+  border-radius:8px;padding:12px;font-size:15px;font-family:var(--sans);
+  appearance:none;-webkit-appearance:none;
+}
+select:focus,input:focus{outline:2px solid var(--stamp);outline-offset:1px;border-color:transparent}
+.row{display:flex;gap:8px;align-items:stretch}
+.row>*{flex:1}
+.row>.btn-sq{flex:0 0 48px}
+label.fld{display:block;margin:12px 0 0}
+label.fld span{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+.hint{font-size:12px;color:var(--dim);margin-top:6px}
+
+button{
+  font-family:var(--sans);border:1px solid var(--line);background:var(--panel2);
+  color:var(--paper);border-radius:8px;padding:12px;font-size:14.5px;cursor:pointer;
+}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
+button:disabled{opacity:.45;pointer-events:none}
+.btn-sq{font-size:19px;padding:0}
+.seg{display:flex;gap:8px;margin:10px 0 0}
+.seg button{flex:1;font-family:var(--mono);letter-spacing:.06em}
+.seg button.on{border-color:var(--stamp);color:var(--stamp);background:var(--stamp-dim)}
+
+details.panel{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+details.panel::before{
+  content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  background:var(--stamp);opacity:.55;border-radius:0 3px 3px 0;
+}
+details.panel summary{
+  list-style:none;cursor:pointer;padding:13px 16px 13px 19px;display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;
+}
+details.panel summary::-webkit-details-marker{display:none}
+details.panel summary::after{content:"+";color:var(--stamp);font-size:16px}
+details.panel[open] summary::after{content:"–"}
+details.panel .inner{padding:2px 16px 16px 19px}
+
+/* ---------- Produktion / Beweis-Log ---------- */
+#produceBtn{
+  width:100%;margin-top:12px;padding:16px;font-family:var(--disp);font-size:18px;
+  letter-spacing:.14em;background:var(--stamp);border-color:var(--stamp);color:#FFF3EC;
+}
+#produceBtn:disabled{background:var(--panel2);border-color:var(--line);color:var(--dim)}
+.log{
+  margin-top:14px;background:#0E1114;border:1px solid var(--line);border-radius:8px;
+  padding:10px 12px;font-family:var(--mono);font-size:11.5px;line-height:1.9;
+  max-height:210px;overflow-y:auto;display:none;color:#AEB6BF;
+}
+.log .t{color:var(--dim)}
+.log .ok{color:var(--ok)}
+.log .err{color:var(--stamp)}
+.bar{height:4px;background:var(--line);border-radius:99px;margin-top:12px;overflow:hidden;display:none}
+.bar i{display:block;height:100%;width:0%;background:var(--stamp);transition:width .4s}
+
+/* ---------- Ergebnisse ---------- */
+.result{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px;margin-top:14px;
+}
+.result video{width:100%;max-width:270px;display:block;margin:0 auto 12px;border-radius:10px;background:#000;aspect-ratio:9/16}
+.result .dl{width:100%;background:var(--stamp-dim);border-color:var(--stamp);color:var(--stamp);font-weight:600}
+.meta{margin-top:10px}
+.meta .m-row{border-top:1px dashed var(--line);padding:9px 0}
+.meta .m-lbl{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:3px}
+.meta .m-lbl button{padding:3px 10px;font-size:11px;border-radius:6px}
+.meta .m-val{font-size:13.5px;color:#D8D3C7;word-break:break-word;white-space:pre-wrap}
+footer{margin:26px 0 8px;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.14em;line-height:2}
+
+/* ---------- Sticky Action ---------- */
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,rgba(11,13,16,.92) 30%);
+  display:none;
+}
+.dock .wrap{display:flex;gap:8px}
+.dock button{flex:1;font-family:var(--mono);letter-spacing:.1em;background:var(--panel);border-color:var(--line)}
+
+canvas#stage{display:none}
+
+/* ---------- v1.5 Politur ---------- */
+.akte,details.panel,.result{border-radius:14px}
+select,input[type=text],input[type=password],button{border-radius:10px}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C42B1C' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;
+}
+header{padding:20px 0 6px}
+.brand{font-size:30px}
+section{margin:16px 0}
+.pipe{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{
+  flex:1 1 30%;min-width:88px;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:7px 4px;
+  background:var(--panel);transition:all .25s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.chip.run{color:var(--paper);border-color:var(--stamp);background:var(--stamp-dim);animation:chipPulse 1.4s ease-in-out infinite}
+.chip.done{color:var(--ok);border-color:rgba(76,154,107,.5)}
+.chip.err{color:var(--stamp);border-color:var(--stamp);background:rgba(196,43,28,.08)}
+@keyframes chipPulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes stampSlam{
+  0%{transform:rotate(6deg) scale(2.4);opacity:0}
+  55%{transform:rotate(6deg) scale(.9);opacity:1}
+  75%{transform:rotate(6deg) scale(1.06)}
+  100%{transform:rotate(6deg) scale(1)}
+}
+.stamp.slam{animation:stampSlam .5s cubic-bezier(.2,.8,.25,1)}
+@keyframes bannerSlam{
+  0%{transform:scale(1.6) rotate(-3deg);opacity:0}
+  60%{transform:scale(.95) rotate(-3deg);opacity:1}
+  80%{transform:scale(1.03) rotate(-3deg)}
+  100%{transform:scale(1) rotate(-3deg)}
+}
+.stamp-slam-banner{
+  margin:0 0 12px;padding:14px 16px;border:3px solid #3E8E5B;border-radius:10px;
+  color:#3E8E5B;font:700 22px ui-monospace,monospace;text-align:center;letter-spacing:.05em;
+  background:rgba(62,142,91,.08);transform:rotate(-3deg);animation:bannerSlam .5s cubic-bezier(.2,.8,.25,1);
+}
+.stamp-slam-banner.warn{border-color:#D93A28;color:#D93A28;background:rgba(217,58,40,.08)}
+#produceBtn{border-radius:12px;box-shadow:0 6px 24px rgba(196,43,28,.25)}
+#produceBtn:disabled{box-shadow:none}
+.result video{border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.log{border-radius:10px}
+.dock button{border-radius:99px}
+@media (prefers-reduced-motion:reduce){.chip.run{animation:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">SPUR<b>LOS</b></div>
+  <div class="brand-sub">Wahre Fälle · Ungelöst</div>
+  <div class="brand-rule">AKTEN-GENERATOR · v5.58</div>
+</header>
+
+<!-- AUDIT -->
+<section>
+  <details class="panel" id="auditSec" open>
+    <summary>🩺 System-Check <span class="tag" id="auditSummary">— noch nicht geprüft</span></summary>
+    <div class="inner">
+      <div class="pipe" id="auditChips">
+        <span class="chip" data-audit="gemini">GEMINI</span>
+        <span class="chip" data-audit="groq">GROQ</span>
+        <span class="chip" data-audit="cf">CLOUDFLARE</span>
+        <span class="chip" data-audit="polli">POLLI</span>
+        <span class="chip" data-audit="hf">HUGGFACE</span>
+        <span class="chip" data-audit="eleven">ELEVEN</span>
+      </div>
+      <div class="hint" id="auditDetail">Prüft alle hinterlegten Schlüssel ohne nennenswerte Kosten zu verursachen (nutzt nur Konto-/Modell-Abfragen, keine echte Generierung).</div>
+      <div class="row" style="margin-top:12px">
+        <button id="auditBtn">🩺 Jetzt prüfen</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- FALL -->
+<section>
+  <div class="sec-label"><span>01 · Fall</span><span class="tag" id="dbCount">🔍 KI-Recherche</span></div>
+  <select id="caseSelect" style="display:none"></select>
+  <div class="akte" id="caseCard" style="display:none">
+    <div class="akte-head">
+      <div>
+        <div class="akte-nr" id="cNr">AKTE #000</div>
+        <div class="akte-name" id="cName">—</div>
+        <div class="akte-meta" id="cMeta">—</div>
+      </div>
+      <div class="stamp" id="cStamp">UNGELÖST</div>
+    </div>
+    <ul class="fakten" id="cFacts"></ul>
+    <button id="toggleDone" style="margin-top:12px;width:100%"></button>
+  </div>
+</section>
+
+<!-- STIMME & SCHLÜSSEL -->
+<section>
+  <details class="panel" id="settingsPanel">
+    <summary>02 · Stimme &amp; Schlüssel</summary>
+    <div class="inner">
+      <label class="fld"><span>ElevenLabs API-Key</span>
+        <input type="text" id="elKey" placeholder="sk_… (leer = Gratis-Fallback-Stimme)" autocomplete="off">
+      </label>
+      <label class="fld"><span>Erzählstimme</span>
+        <select id="voiceSelect">
+          <option value="onwK4e9ZLuTAKqWW03F9">Daniel · tief, dokumentarisch (empfohlen)</option>
+          <option value="N2lVS1w4EtoT3dr4eOWO">Callum · rau, düster</option>
+          <option value="pNInz6obpgDQGcFmaJgB">Adam · kräftig, klar</option>
+          <option value="ErXwobaYiN019PkySvjV">Antoni · ruhig, warm</option>
+          <option value="custom">Eigene Voice-ID …</option>
+        </select>
+      </label>
+      <label class="fld" id="customVoiceWrap" style="display:none"><span>Eigene Voice-ID</span>
+        <input type="text" id="customVoice" placeholder="Voice-ID einfügen" autocomplete="off">
+      </label>
+      <label class="fld"><span>Gemini API-Key (optional · komplett KOSTENLOS, kein Guthaben nötig)</span>
+        <input type="text" id="geminiKey" placeholder="Gratis-Key von aistudio.google.com" autocomplete="off">
+      </label>
+      <label class="fld"><span>Groq API-Key (empfohlen · komplett KOSTENLOS, eigene Infrastruktur – unabhängig von Google/Pollinations)</span>
+        <input type="text" id="groqKey" placeholder="gsk_… von console.groq.com (keine Kreditkarte nötig, gratis)" autocomplete="off">
+      </label>
+      <label class="fld"><span>Pollinations API-Key (empfohlen · komplett KOSTENLOS, sichert Skripte UND Bilder ab)</span>
+        <input type="text" id="polliKey" placeholder="pk_… von enter.pollinations.ai (2 Min., gratis)" autocomplete="off">
+      </label>
+      <label class="fld"><span>Hugging Face Token (aktuell UNGENUTZT · HF hat FLUX aus der Gratis-Stufe entfernt, Juli 2026 – Feld bleibt für später)</span>
+        <input type="text" id="hfKey" placeholder="hf_… von huggingface.co/settings/tokens (2 Min., gratis)" autocomplete="off">
+      </label>
+      <label class="fld"><span>Cloudflare Account-ID (empfohlen · komplett KOSTENLOS, eigene Bild-Infrastruktur – dash.cloudflare.com → rechte Spalte)</span>
+        <input type="text" id="cfAccountId" placeholder="32-stellige Account-ID" autocomplete="off">
+      </label>
+      <label class="fld"><span>Cloudflare API-Token (Berechtigung "Workers AI" → Lesen+Schreiben, gratis)</span>
+        <input type="text" id="cfApiToken" placeholder="von dash.cloudflare.com → Mein Profil → API-Token" autocomplete="off">
+      </label>
+      <div class="hint">Modell: eleven_multilingual_v2 · Die gewählte Voice-ID wird bei jedem Aufruf frisch gelesen (Voice-Bug aus NACHTZEUGE ist hier gefixt). Ohne Key wird automatisch die Gratis-Stimme (Pollinations) genutzt.</div>
+      <div class="row" style="margin-top:12px">
+        <button id="testVoice">🔊 Stimmprobe</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- PRODUKTION -->
+<section>
+  <div class="sec-label"><span>03 · Produktion</span><span class="tag" id="hookTag"></span></div>
+  <div class="seg" id="batchSeg">
+    <button data-n="1" class="on">1</button>
+    <button data-n="2">2</button>
+    <button data-n="4">4</button>
+    <button data-n="8">8</button>
+    <button data-n="12" title="Urlaubsmodus – reicht für 6 Tage">12 🏖</button>
+  </div>
+  <details class="panel" id="plannerSec">
+    <summary>🎯 Ziel-Planer <span class="tag" id="plannerSummary">optional</span></summary>
+    <div class="inner">
+      <div class="hint">Datum + Uhrzeiten eingeben → App berechnet die Stückzahl und plant die YouTube-Termine. Du produzierst alles direkt hintereinander, YouTube schaltet automatisch zur richtigen Zeit live.</div>
+      <label class="fld"><span>Ab Datum (leer = heute)</span><input type="date" id="planStartDate"></label>
+      <label class="fld"><span>Bis Datum</span><input type="date" id="planDate"></label>
+      <label class="fld"><span>Videos pro Tag</span><input type="number" id="planPerDay" min="1" max="4" value="2"></label>
+      <label class="fld"><span>Uhrzeit 1</span><input type="time" id="planTime1" value="11:30"></label>
+      <label class="fld"><span>Uhrzeit 2 (nur bei 2+/Tag)</span><input type="time" id="planTime2" value="18:00"></label>
+      <label class="fld"><span><input type="checkbox" id="planSchedule" checked> Auf YouTube automatisch zu diesen Zeiten veröffentlichen (statt sofort live)</span></label>
+      <div class="row" style="margin-top:12px"><button id="planApply">📐 Stückzahl + Zeitplan übernehmen</button></div>
+    </div>
+  </details>
+
+  <details class="panel" id="ytSec">
+    <summary>☁️ YouTube Auto-Upload <span class="tag" id="ytStatus">nicht verbunden</span></summary>
+    <div class="inner">
+      <div class="hint">Einmalig einrichten: Google-Cloud-Projekt → YouTube Data API v3 aktivieren → OAuth-Client-ID (Typ "Webanwendung") erstellen, als autorisierten JavaScript-Ursprung deine GitHub-Pages-URL eintragen. Danach hier die Client-ID einfügen und verbinden.</div>
+      <label class="fld"><span>Google OAuth Client-ID</span>
+        <input type="text" id="ytClientId" placeholder="xxxxxxxxxx.apps.googleusercontent.com" autocomplete="off">
+      </label>
+      <div class="row" style="margin-top:12px"><button id="ytConnect">🔗 Mit Google verbinden</button></div>
+      <label class="fld" style="margin-top:12px"><span><input type="checkbox" id="ytAutoUpload"> Fertige Videos automatisch zu YouTube hochladen</span></label>
+      <label class="fld"><span>Sichtbarkeit</span>
+        <select id="ytPrivacy">
+          <option value="public" selected>Öffentlich (sofort live)</option>
+          <option value="unlisted">Nicht gelistet</option>
+          <option value="private">Privat (zur Prüfung)</option>
+        </select>
+      </label>
+      <div class="hint">Standard: <b>öffentlich</b> – Videos gehen direkt live, ohne manuellen Freigabeschritt.</div>
+    </div>
+  </details>
+  <details class="panel" id="perfSec">
+    <summary>📊 Performance <span class="tag" id="perfStatus">optional</span></summary>
+    <div class="inner">
+      <div class="hint">Zieht deine echten YouTube-Analytics-Daten (Views, Ø Sehdauer, Likes) der letzten 30 Tage direkt in die App – inkl. Retentionskurve pro Video (springen Leute schon beim Hook ab oder erst später?). Der Hook-Stil-Tag erscheint erst bei Videos, die ab jetzt hochgeladen werden. Braucht dieselbe Google-Verbindung wie oben (ggf. einmalig neu verbinden für den Analytics-Zugriff).</div>
+      <div class="row" style="margin-top:12px"><button id="perfLoad">📊 Performance laden</button></div>
+      <div id="perfList" style="margin-top:12px"></div>
+    </div>
+  </details>
+  <div id="batchDone" class="stamp-slam-banner" style="display:none"></div>
+  <button id="produceBtn">▶ FALL PRODUZIEREN</button>
+  <div class="pipe" id="pipe">
+    <span class="chip" data-step="skript">SKRIPT</span>
+    <span class="chip" data-step="stimme">STIMME</span>
+    <span class="chip" data-step="bilder">BILDER</span>
+    <span class="chip" data-step="render">RENDER</span>
+  </div>
+  <div class="bar" id="bar"><i></i></div>
+  <div class="log" id="log" aria-live="polite"></div>
+</section>
+
+<!-- ERGEBNISSE -->
+<section id="resultsSec" style="display:none">
+  <div class="sec-label"><span>04 · Beweismittel</span><span class="tag" id="resCount"></span></div>
+  <div id="results"></div>
+</section>
+
+<footer>
+  DEINE UPLOAD-ZEITEN: 11:30 UHR & 18:00 UHR (Gemini-optimiert)<br>
+  KONSISTENZ SCHLÄGT MINUTENGENAUES TIMING · TITEL = FALLNAME + FRAGE<br>
+  KOMMENTARFRAGE IMMER ANPINNEN
+</footer>
+
+</div>
+
+<div class="dock" id="dock">
+  <div class="wrap">
+    <button id="dockNew">＋ NÄCHSTER FALL</button>
+    <button id="dockTop">↑ ERGEBNISSE</button>
+  </div>
+</div>
+
+<canvas id="stage" width="1080" height="1920"></canvas>
+
+<script>
+/* ============================================================
+   SPURLOS v5.58 · Akten-Generator
+   Pipeline: Fall → KI-Skript → TTS → KI-Bilder → Canvas-Render → YouTube
+   Ausfallsicherheit: 4 Skript-Quellen (Claude→Gemini→Pollinations→anonym),
+   3 Fall-Recherchequellen (Wikipedia→Gemini-Suche→Archiv), 5 Bild-KIs
+   (Flux→Hugging Face→Pollinations-auth→Pollinations-auto→Gemini),
+   automatischer System-Check, Speicher-Cleanup nach jedem Video.
+   ============================================================ */
+
+/* ---------------- SYSTEM-CHECK / AUDIT ---------------- */
+/* Prüft jeden hinterlegten Key mit einer kosten-neutralen Anfrage (Konto-/Modell-Listen statt echter Generierung) */
+async function auditGemini(key){
+  if(!key)return{status:'err',msg:'kein Key – Gratis-Fallback #1 fehlt! aistudio.google.com'};
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
+    if(r.ok)return{status:'ok',msg:'Key gültig'};
+    return{status:'err',msg:'HTTP '+r.status+' – Key ungültig oder gesperrt'};
+  }catch(e){return{status:'err',msg:'nicht erreichbar: '+e.message};}
+}
+async function auditGroq(key){
+  if(!key)return{status:'skip',msg:'kein Key (empfohlen · 2. Skript-Stufe, eigene Infrastruktur – console.groq.com, gratis, keine Kreditkarte)'};
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+key}});
+    if(r.ok)return{status:'ok',msg:'Key gültig'};
+    return{status:'err',msg:'HTTP '+r.status+' – Key ungültig'};
+  }catch(e){return{status:'err',msg:'nicht erreichbar: '+e.message};}
+}
+async function auditCloudflare(){
+  const acc=$('cfAccountId').value.trim(),tok=$('cfApiToken').value.trim();
+  if(!acc||!tok)return{status:'skip',msg:'kein Zugang hinterlegt (empfohlen · unabhängige Bild-Stufe, 100.000 Bilder/Tag gratis – dash.cloudflare.com)'};
+  try{
+    const r=await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/tokens/verify`,{headers:{'Authorization':'Bearer '+tok}});
+    if(r.ok)return{status:'ok',msg:'Zugang gültig'};
+    if(r.status===0)return{status:'err',msg:'evtl. CORS-Sperre – Direktzugriff aus dem Browser evtl. nicht möglich, dann Worker-Proxy nötig'};
+    return{status:'err',msg:'HTTP '+r.status+' – Account-ID oder Token prüfen'};
+  }catch(e){return{status:'err',msg:'nicht erreichbar (evtl. CORS-Sperre): '+e.message};}
+}
+async function auditPolli(key){
+  if(!key)return{status:'err',msg:'kein Key – Gratis-Fallback #2 fehlt! enter.pollinations.ai'};
+  try{
+    const r=await fetch('https://gen.pollinations.ai/v1/models',{headers:{'Authorization':'Bearer '+key}});
+    if(r.ok)return{status:'ok',msg:'Key gültig'};
+    return{status:'err',msg:'HTTP '+r.status+' – Key ungültig'};
+  }catch(e){return{status:'err',msg:'nicht erreichbar: '+e.message};}
+}
+async function auditHF(key){
+  if(!key)return{status:'skip',msg:'kein Key (optional · 5. Bild-Stufe, empfohlen für große Batches)'};
+  try{
+    const r=await fetch('https://huggingface.co/api/whoami-v2',{headers:{'Authorization':'Bearer '+key}});
+    if(r.ok)return{status:'ok',msg:'Key gültig'};
+    return{status:'err',msg:'HTTP '+r.status+' – Key ungültig'};
+  }catch(e){return{status:'err',msg:'nicht erreichbar: '+e.message};}
+}
+async function auditEleven(key){
+  if(!key)return{status:'skip',msg:'kein Key (Gratis-Stimme aktiv)'};
+  try{
+    const r=await fetch('https://api.elevenlabs.io/v1/user',{headers:{'xi-api-key':key}});
+    if(r.ok)return{status:'ok',msg:'Key gültig'};
+    if(r.status===401)return{status:'err',msg:'Key ungültig'};
+    return{status:'err',msg:'HTTP '+r.status};
+  }catch(e){return{status:'err',msg:'nicht erreichbar: '+e.message};}
+}
+const AUDIT_LABEL={gemini:'GEMINI',groq:'GROQ',cf:'CLOUDFLARE',polli:'POLLI',hf:'HUGGFACE',eleven:'ELEVEN'};
+async function runAudit(){
+  const btn=$('auditBtn');if(btn){btn.disabled=true;btn.textContent='⏳ PRÜFE …';}
+  const keys={gemini:$('geminiKey').value.trim(),groq:$('groqKey').value.trim(),cf:true,polli:$('polliKey').value.trim(),hf:$('hfKey').value.trim(),eleven:$('elKey').value.trim()};
+  const checks={gemini:auditGemini,groq:auditGroq,cf:auditCloudflare,polli:auditPolli,hf:auditHF,eleven:auditEleven};
+  const results=await Promise.all(Object.keys(checks).map(async k=>[k,await checks[k](keys[k])]));
+  let errCount=0,lines=[];
+  results.forEach(([k,res])=>{
+    const chip=document.querySelector('.chip[data-audit="'+k+'"]');
+    if(!chip)return;
+    chip.classList.remove('done','err');
+    if(res.status==='ok'){chip.classList.add('done');chip.textContent=AUDIT_LABEL[k]+' ✓';}
+    else if(res.status==='err'){chip.classList.add('err');chip.textContent=AUDIT_LABEL[k]+' ✗';errCount++;lines.push('⚠️ '+AUDIT_LABEL[k]+': '+res.msg);}
+    else{chip.textContent=AUDIT_LABEL[k]+' –';}
+  });
+  const sum=$('auditSummary');
+  if(errCount===0){sum.textContent='✅ Alle Systeme ok';sum.style.color='var(--ok)';}
+  else{sum.textContent='⚠️ '+errCount+' Problem'+(errCount>1?'e':'');sum.style.color='var(--stamp)';}
+  $('auditDetail').innerHTML=lines.length?lines.join('<br>'):'Prüft alle hinterlegten Schlüssel ohne nennenswerte Kosten zu verursachen.';
+  if(btn){btn.disabled=false;btn.textContent='🩺 Jetzt prüfen';}
+  return errCount;
+}
+
+/* ---------------- YOUTUBE AUTO-UPLOAD (Google Identity Services, direkt aus dem Browser) ---------------- */
+let ytAccessToken=null,ytTokenClient=null,ytRefreshTimer=null;
+let ytUploadedTitles=null,ytTitlesFetchedAt=0;
+async function getYtUploadedTitles(){
+  if(!ytAccessToken)return [];
+  if(ytUploadedTitles&&Date.now()-ytTitlesFetchedAt<600000)return ytUploadedTitles; // 10 Min. Cache
+  try{
+    const chR=await fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true',{headers:{'Authorization':'Bearer '+ytAccessToken}});
+    if(!chR.ok){
+      if(chR.status===403||chR.status===401)log('KI-Dopplungs-Check: YouTube-Zugriff reicht nicht zum Lesen deiner Videos (nur Upload-Berechtigung erteilt) – Duplikat-Check läuft ohne Kanal-Abgleich weiter','err');
+      return ytUploadedTitles=[];
+    }
+    const ch=await chR.json();
+    const playlistId=ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if(!playlistId)return ytUploadedTitles=[];
+    let titles=[],pageToken='';
+    for(let p=0;p<5;p++){ // bis zu 250 Videos (5×50)
+      const r=await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}${pageToken?'&pageToken='+pageToken:''}`,{headers:{'Authorization':'Bearer '+ytAccessToken}});
+      if(!r.ok)break;
+      const j=await r.json();
+      (j.items||[]).forEach(i=>{
+        const title=i.snippet?.title||'';
+        const desc=i.snippet?.description||'';
+        const m=desc.match(/\[spurlos-fall-id:\s*([^\]]+)\]/); // zuverlässiger roher Fallname, unabhängig vom KI-Klickbait-Titel
+        titles.push(m?m[1].trim():title);
+      });
+      pageToken=j.nextPageToken;
+      if(!pageToken)break;
+    }
+    log('KI-Dopplungs-Check: '+titles.length+' bereits hochgeladene Fälle von YouTube geladen – werden bei der Recherche automatisch ausgeschlossen','ok');
+    return ytUploadedTitles=titles;
+  }catch(e){log('KI-Dopplungs-Check: YouTube-Titel konnten nicht geladen werden ('+e.message+')','err');return ytUploadedTitles=[];}
+  finally{ytTitlesFetchedAt=Date.now();}
+}
+function ytInitTokenClient(){
+  const cid=$('ytClientId').value.trim();
+  if(!cid||!window.google?.accounts?.oauth2)return null;
+  return google.accounts.oauth2.initTokenClient({
+    client_id:cid,
+    scope:'https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/yt-analytics.readonly',
+    callback:(resp)=>{
+      if(resp.error){log('YouTube-Login fehlgeschlagen: '+resp.error,'err');return;}
+      ytAccessToken=resp.access_token;
+      $('ytStatus').textContent='✅ verbunden';$('ytStatus').style.color='var(--ok)';
+      log('YouTube ✓ verbunden','ok');
+      // Modernisierung: Token läuft nach ~1 Std. ab – App holt sich rechtzeitig VORHER
+      // im Hintergrund selbstständig einen neuen (still, ohne Popup), solange der Tab offen bleibt.
+      clearTimeout(ytRefreshTimer);
+      const lifetimeMs=(resp.expires_in?+resp.expires_in:3599)*1000;
+      ytRefreshTimer=setTimeout(()=>{
+        log('YouTube: erneuere Zugang im Hintergrund …');
+        try{ytTokenClient.requestAccessToken({prompt:''});}catch(e){log('Automatische YouTube-Erneuerung fehlgeschlagen – bitte einmal neu verbinden','err');}
+      },Math.max(60000,lifetimeMs-300000)); // 5 Min. vor Ablauf, mind. nach 1 Min.
+    }
+  });
+}
+async function uploadToYouTube(c,script,vid,retry,publishAt){
+  if(!ytAccessToken)throw new Error('nicht mit YouTube verbunden – bitte oben "Mit Google verbinden" klicken');
+  const tags=(script.hashtags||[]).map(h=>h.replace(/^#/,''));
+  const status=publishAt
+    ?{privacyStatus:'private',publishAt:publishAt.toISOString(),selfDeclaredMadeForKids:false,containsSyntheticMedia:true} // geplant: muss "private" sein, YouTube schaltet selbst zur Zeit frei
+    :{privacyStatus:$('ytPrivacy').value||'public',selfDeclaredMadeForKids:false,containsSyntheticMedia:true};
+  const meta={
+    snippet:{
+      title:(script.seo_titel||script.titel||c.name).slice(0,100),
+      description:(script.beschreibung||'')+'\n\n'+(script.hashtags||[]).join(' ')+'\n\n[spurlos-fall-id: '+c.name+'] [spurlos-hook: '+(script.hookTag||'?')+']',
+      tags,categoryId:'22',defaultLanguage:'de',defaultAudioLanguage:'de'
+    },
+    status
+  };
+  const initR=await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+ytAccessToken,'Content-Type':'application/json','X-Upload-Content-Type':vid.blob.type||'video/mp4'},
+    body:JSON.stringify(meta)
+  });
+  if(!initR.ok){
+    if(initR.status===401&&!retry&&ytTokenClient){
+      // Token mitten im Upload abgelaufen → einmal still erneuern und automatisch nochmal versuchen
+      log('YouTube-Token abgelaufen → stiller Refresh + ein Wiederholungsversuch …','err');
+      ytAccessToken=null;
+      const refreshed=await new Promise(res=>{
+        const prevCb=ytTokenClient.callback;
+        ytTokenClient.callback=(resp)=>{ytTokenClient.callback=prevCb;if(!resp.error)ytAccessToken=resp.access_token;prevCb(resp);res(!resp.error);};
+        try{ytTokenClient.requestAccessToken({prompt:''});}catch(e){res(false);}
+        setTimeout(()=>res(false),8000);
+      });
+      if(refreshed)return uploadToYouTube(c,script,vid,true,publishAt);
+    }
+    throw new Error('YouTube-Init HTTP '+initR.status+' – '+(await initR.text()).slice(0,200));
+  }
+  const uploadUrl=initR.headers.get('Location');
+  const putR=await fetch(uploadUrl,{method:'PUT',headers:{'Content-Type':vid.blob.type||'video/mp4'},body:vid.blob});
+  if(!putR.ok)throw new Error('YouTube-Upload HTTP '+putR.status);
+  const j=await putR.json();
+  log('YouTube ✓ hochgeladen ('+($('ytPrivacy').value)+'): youtu.be/'+j.id,'ok');
+  // Gamechanger: eigenes Cover-Bild direkt als Thumbnail setzen, statt dass du es in YouTube Studio nachbessern musst.
+  if(vid.thumbBlob){
+    try{
+      log('Thumbnail: lade '+(vid.thumbBlob.size/1024).toFixed(0)+' KB hoch …');
+      const tr=await fetch('https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId='+j.id,{
+        method:'POST',headers:{'Authorization':'Bearer '+ytAccessToken,'Content-Type':'image/jpeg'},body:vid.thumbBlob
+      });
+      if(!tr.ok)throw new Error('HTTP '+tr.status+' – '+(await tr.text()).slice(0,150));
+      log('Thumbnail ✓ automatisch gesetzt (eigenes Cover-Bild statt YouTube-Vorschlag)','ok');
+    }catch(e){log('Thumbnail-Upload fehlgeschlagen: '+e.message+' (Video ist trotzdem live, YouTube wählt eigenen Frame)','err');}
+  }
+  // Gamechanger: exakte Untertitel aus dem Skript-Timing mit hochladen, statt YouTubes ungenaue Auto-Untertitel.
+  try{
+    const {words}=buildTimeline(script,vid.dur,vid.alignment);
+    await uploadCaptions(j.id,buildSRT(words));
+    log('Untertitel ✓ hochgeladen (exaktes Skript-Timing, nicht YouTubes Auto-Erkennung)','ok');
+  }catch(e){log('Untertitel-Upload fehlgeschlagen: '+e.message+' (Video ist trotzdem live, YouTube erstellt automatische Untertitel)','err');}
+  return j;
+}
+function srtTime(s){
+  s=Math.max(0,s);
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60),ms=Math.round((s-Math.floor(s))*1000);
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')+','+String(ms).padStart(3,'0');
+}
+function buildSRT(words){
+  const groupSize=6;
+  const cues=[];
+  for(let i=0,idx=1;i<words.length;i+=groupSize,idx++){
+    const grp=words.slice(i,i+groupSize);
+    if(!grp.length)continue;
+    cues.push(idx+'\n'+srtTime(grp[0].start)+' --> '+srtTime(grp[grp.length-1].end)+'\n'+grp.map(w=>w.w).join(' ')+'\n');
+  }
+  return cues.join('\n');
+}
+async function uploadCaptions(videoId,srtText,retry){
+  const boundary='spurlosCaptionBoundary';
+  const metadata={snippet:{videoId,language:'de',name:'Deutsch',isDraft:false}};
+  const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n'+
+    '--'+boundary+'\r\nContent-Type: text/plain\r\n\r\n'+srtText+'\r\n'+
+    '--'+boundary+'--';
+  const r=await fetch('https://www.googleapis.com/upload/youtube/v3/captions?uploadType=multipart&part=snippet',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+ytAccessToken,'Content-Type':'multipart/related; boundary='+boundary},
+    body
+  });
+  if(!r.ok){
+    // FIX: Untertitel-Upload schlägt oft mit einer irreführenden "Berechtigung nicht ausreichend"-Meldung
+    // fehl, wenn YouTube das frisch hochgeladene Video serverseitig noch nicht fertig verarbeitet hat –
+    // kein echtes Rechteproblem. Einmaliger Retry nach kurzer Wartezeit behebt das in der Praxis meistens.
+    if(r.status===403&&!retry){log('Untertitel: YouTube verarbeitet das Video evtl. noch – warte 20s und versuche nochmal …','err');await sleep(20000);return uploadCaptions(videoId,srtText,true);}
+    throw new Error('HTTP '+r.status+' – '+(await r.text()).slice(0,150));
+  }
+  return await r.json();
+}
+
+/* ---------------- FALL-DATENBANK (kuratiert, dokumentierte Fälle) ---------------- */
+const CASES=[];
+/* Kuratiertes Archiv entfernt – SPURLOS läuft jetzt ausschließlich über KI-Recherche (Wikipedia + Gemini-Suche). */
+const PROMI_IDS=new Set([]);
+
+/* ---------------- HOOK-FORMELN (7er-Rotation) ---------------- */
+const HOOKS=[
+{tag:"TIMESTAMP",anweisung:"Beginne mit exaktem Datum/Uhrzeit-Gefühl und dem letzten dokumentierten Moment. Muster: 'Am [Datum], [Ort]. [Letzter Moment]. Danach: nichts mehr.'"},
+{tag:"LETZTES BILD",anweisung:"Beginne mit dem letzten Bild/Video/Foto der Person. Muster: 'Das ist das letzte Bild von [Name]. Was danach geschah, kann niemand erklären.'"},
+{tag:"LETZTE WORTE",anweisung:"Beginne mit den letzten dokumentierten Worten oder dem letzten Anruf. Muster: 'Seine letzten Worte waren: […]. Dann brach die Verbindung ab.'"},
+{tag:"UNMÖGLICHKEIT",anweisung:"Beginne mit dem physikalisch/logisch Unmöglichen am Fall. Muster: 'Ein Mensch betritt [Ort]. Kameras überall. Aber niemand sieht ihn je wieder herauskommen.'"},
+{tag:"DAS DETAIL",anweisung:"Beginne mit einem einzelnen verstörenden Beweisstück. Muster: 'Ein [Gegenstand]. Mehr fand die Polizei nicht. Und genau das ergibt keinen Sinn.'"},
+{tag:"COUNTDOWN",anweisung:"Beginne mit: 'Drei Dinge an diesem Fall ergeben bis heute keinen Sinn.' und zähle sie im Video herunter."},
+{tag:"DER ORT",anweisung:"Beginne mit dem Ort als Hauptfigur. Muster: 'Dieser [Ort] sieht harmlos aus. Doch was hier [Jahr] geschah, beschäftigt Ermittler bis heute.'"}
+];
+
+/* ---------------- STATE & HELPERS ---------------- */
+const $=id=>document.getElementById(id);
+const S={
+  get k(){return localStorage.getItem('sp_elkey')||''},
+  set k(v){localStorage.setItem('sp_elkey',v)},
+  get voice(){return localStorage.getItem('sp_voice')||'onwK4e9ZLuTAKqWW03F9'},
+  set voice(v){localStorage.setItem('sp_voice',v)},
+  get cvoice(){return localStorage.getItem('sp_cvoice')||''},
+  set cvoice(v){localStorage.setItem('sp_cvoice',v)},
+  get gemini(){return localStorage.getItem('sp_gemini')||''},
+  set gemini(v){localStorage.setItem('sp_gemini',v)},
+  get groq(){return localStorage.getItem('sp_groq')||''},
+  set groq(v){localStorage.setItem('sp_groq',v)},
+  get cfAcc(){return localStorage.getItem('sp_cfAcc')||''},
+  set cfAcc(v){localStorage.setItem('sp_cfAcc',v)},
+  get cfTok(){return localStorage.getItem('sp_cfTok')||''},
+  set cfTok(v){localStorage.setItem('sp_cfTok',v)},
+  get polli(){return localStorage.getItem('sp_polli')||''},
+  set polli(v){localStorage.setItem('sp_polli',v)},
+  get hf(){return localStorage.getItem('sp_hf')||''},
+  set hf(v){localStorage.setItem('sp_hf',v)},
+  get ytClient(){return localStorage.getItem('sp_ytclient')||''},
+  set ytClient(v){localStorage.setItem('sp_ytclient',v)},
+  get ytAuto(){return localStorage.getItem('sp_ytauto')==='1'},
+  set ytAuto(v){localStorage.setItem('sp_ytauto',v?'1':'0')},
+  get ytPrivacy(){return localStorage.getItem('sp_ytprivacy')||'public'},
+  set ytPrivacy(v){localStorage.setItem('sp_ytprivacy',v)},
+  get hookIdx(){return +(localStorage.getItem('sp_hook')||0)},
+  set hookIdx(v){localStorage.setItem('sp_hook',v)},
+  get done(){try{return JSON.parse(localStorage.getItem('sp_done')||'[]')}catch(e){return[]}},
+  set done(v){localStorage.setItem('sp_done',JSON.stringify(v.slice(-2000)))}, // FIX: bezog sich auf CASES.length, das seit v5.32 immer 0 ist → Liste wurde bei jedem Speichern faktisch geleert
+  get extra(){try{return JSON.parse(localStorage.getItem('sp_extra')||'[]')}catch(e){return[]}},
+  set extra(v){localStorage.setItem('sp_extra',JSON.stringify(v))}
+};
+let batchN=1, busy=false, resultCount=0;
+window.__largeOK=true; // Session-Flag: große KI-Antworten sind ok, kein falscher Überlast-Fehler
+
+function log(msg,cls){
+  const el=$('log');el.style.display='block';
+  const t=new Date().toTimeString().slice(0,8);
+  el.insertAdjacentHTML('beforeend',`<div><span class="t">${t}</span> <span class="${cls||''}">${msg}</span></div>`);
+  el.scrollTop=el.scrollHeight;
+}
+function setBar(p){const b=$('bar');b.style.display='block';b.firstElementChild.style.width=Math.round(p*100)+'%';}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const STEP_NAMES={skript:'SKRIPT',stimme:'STIMME',bilder:'BILDER',render:'RENDER'};
+function setStep(id,state,label){
+  const el=document.querySelector('.chip[data-step="'+id+'"]');if(!el)return;
+  el.classList.remove('run','done');if(state)el.classList.add(state);
+  el.textContent=STEP_NAMES[id]+(label?' '+label:'')+(state==='done'?' ✓':'');
+}
+function resetSteps(){Object.keys(STEP_NAMES).forEach(k=>{const el=document.querySelector('.chip[data-step="'+k+'"]');el.classList.remove('run','done');el.textContent=STEP_NAMES[k];});}
+
+async function retryFetch(url,opts={},tries=3,label='Anfrage',timeoutMs=20000){
+  let lastErr;
+  for(let i=0;i<tries;i++){
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(),timeoutMs);
+    try{
+      const r=await fetch(url,{...opts,signal:ctrl.signal});
+      clearTimeout(to);
+      if(r.ok)return r;
+      let detail='';try{detail=(await r.text()).slice(0,200);}catch(e2){}
+      lastErr=new Error(label+': HTTP '+r.status+(detail?' – '+detail:''));lastErr.status=r.status;
+    }catch(e){
+      clearTimeout(to);
+      lastErr=e.name==='AbortError'?new Error(label+': Zeitüberschreitung ('+(timeoutMs/1000)+'s)'):e;
+    }
+    if(i<tries-1){
+      const rl=lastErr&&lastErr.status===429;
+      const wait=rl?15000*(i+1):1200*(i+1)+Math.random()*800;
+      log(label+(rl?' – Rate-Limit, warte '+Math.round(wait/1000)+'s':'')+' – Versuch '+(i+2)+'/'+tries+' …');
+      await sleep(wait);
+    }
+  }
+  throw lastErr;
+}
+
+/* ---------------- SKRIPT-GENERATOR (Pollinations Text, JSON) ---------------- */
+function buildPrompt(c,hook){
+  return `Du bist Autor für virale deutsche True-Crime-YouTube-Shorts (Kanal "SPURLOS"). Schreibe ein 45-60-Sekunden-Skript zum echten Fall unten.
+
+FALL: ${c.name} (${c.ort}, ${c.jahr}) – Status: ${c.status}
+DOKUMENTIERTE FAKTEN (NUR diese verwenden, KEINE Details, Namen oder Daten erfinden):
+${c.fakten.map((f,i)=>(i+1)+'. '+f).join('\n')}
+
+HOOK-STIL FÜR DIESES VIDEO: ${hook.tag} → ${hook.anweisung}
+
+REGELN:
+- Sprache: Deutsch, ruhig, dokumentarisch, kurze Sätze, Präsens für Spannung erlaubt
+- Gesamtlänge gesprochen: 55-70 Wörter (ergibt 30-38 Sek. bei unserer Erzählstimme, der 2026-Sweet-Spot für Shorts-Reichweite) – NICHT länger, jeder Satz zählt
+- Pietätvoll: keine Gewaltdetails, kein Gore, keine Spekulation als Fakt
+- Struktur: hook (1 knapper Satz) → 5-6 szenen (je EIN kurzer, knapper Satz/Halbsatz, nicht mehr – schnellerer Bildwechsel wirkt sich direkt auf die Retention aus) → frage (1 kurze Frage an die Zuschauer, endet mit Aufforderung in die Kommentare zu schreiben)
+- "bild": englischer Bildprompt pro Szene, fotorealistisch-dokumentarisch, kein Text im Bild. WICHTIG bei Personen im Bild: Erscheinung (Hautfarbe/Ethnie, typische Kleidung) muss zu Herkunftsland und Jahrzehnt des Falls passen (recherchiere/schließe logisch aus Name+Ort), NIEMALS ein erkennbares Porträt der echten realen Person – stattdessen Silhouette, Rückenansicht, unscharf, oder Detailaufnahme (Hände, Gegenstände, Umgebung) statt Gesicht.
+
+Antworte AUSSCHLIESSLICH mit validem JSON, ohne Markdown, exakt dieses Schema:
+{"hook":"...","szenen":[{"text":"...","bild":"..."},{"text":"...","bild":"..."},{"text":"...","bild":"..."},{"text":"...","bild":"..."},{"text":"...","bild":"..."},{"text":"...","bild":"..."}],"frage":"...","titel":"Kurzer Feed-Titel mit Fallname","seo_titel":"Suchoptimierter Titel: Fallname + Jahr + Frage","beschreibung":"2-3 Sätze Beschreibung mit Fallname und Jahr","hashtags":["#truecrime","#ungelöst","...6 weitere deutsche/relevante"],"stimmung":"WÄHLE die passende Klang-Stimmung für diesen Fall, exakt eine von: spannung (Verbrechen/Verfolgung) | melancholisch (tragisch, Vermisste, Familien) | unheimlich (unerklärlich, Naturrätsel, Orte) | mysterioes (klassischer Cold Case)"}`;
+}
+
+async function fetchScriptRaw(oi,prompt,seed){
+  const polli=$('polliKey').value.trim();
+  // oi=0: NEUE Pollinations-API (gen.pollinations.ai) mit Gratis-Key – seit 2026 der zuverlässige Weg,
+  // die alte anonyme text.pollinations.ai-Route ist inzwischen stark ratelimitiert/instabil.
+  if(oi===0){
+    if(!polli)throw new Error('Skript-KI (gen.pollinations.ai): kein Pollinations-Key hinterlegt – siehe Einstellungen');
+    const r=await retryFetch('https://gen.pollinations.ai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+polli},
+      body:JSON.stringify({model:'openai',messages:[{role:'user',content:prompt}],response_format:{type:'json_object'},seed})
+    },2,'Skript-KI (gen.pollinations.ai)');
+    const j=await r.json();
+    return j?.choices?.[0]?.message?.content||'';
+  }
+  // oi=1/2: alte anonyme Endpunkte als letzter Notnagel (kein Key nötig, aber unzuverlässig – Rate-Limits)
+  if(oi===1){
+    const r=await retryFetch('https://text.pollinations.ai/openai',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'openai',messages:[{role:'user',content:prompt}],seed})
+    },2,'Skript-KI (Legacy-POST, ohne Key unzuverlässig)');
+    const j=await r.json();
+    return j?.choices?.[0]?.message?.content||'';
+  }
+  const r=await retryFetch('https://text.pollinations.ai/'+encodeURIComponent(prompt)+'?model=openai&seed='+seed,{},2,'Skript-KI (Legacy-GET, ohne Key unzuverlässig)');
+  return await r.text();
+}
+
+/* JSON-Chirurg: repariert abgeschnittene oder leicht kaputte KI-Antworten */
+function repairJSON(s){
+  s=s.replace(/```json|```/g,'').trim();
+  const start=s.indexOf('{');if(start<0)return null;
+  s=s.slice(start);
+  // Kandidaten-Schnittstellen: Ende, dann rückwärts an jedem Element-Ende
+  const cuts=[s.length];
+  for(let i=s.length-1;i>50&&cuts.length<250;i--){
+    if(s[i]===','||s[i]==='}'||s[i]===']')cuts.push(i+(s[i]===','?0:1));
+  }
+  for(const cut of cuts){
+    let t=s.slice(0,cut);
+    // offenen String schließen
+    let inStr=false,stack=[],ok=true;
+    for(let i=0;i<t.length;i++){
+      const ch=t[i];
+      if(inStr){if(ch==='\\')i++;else if(ch==='"')inStr=false;continue;}
+      if(ch==='"')inStr=true;
+      else if(ch==='{'||ch==='[')stack.push(ch);
+      else if(ch==='}'||ch===']'){const o=stack.pop();if((ch==='}')!==(o==='{')){ok=false;break;}}
+    }
+    if(!ok)continue;
+    if(inStr)t+='"';
+    t=t.replace(/,\s*$/,'');
+    while(stack.length)t+=stack.pop()==='{'?'}':']';
+    t=t.replace(/,(\s*[}\]])/g,'$1');
+    try{return JSON.parse(t);}catch(e){}
+  }
+  return null;
+}
+
+/* Reparatur: abweichende Schlüssel/Strukturen normalisieren, Lücken füllen */
+function normalizeScript(js,c){
+  if(js&&typeof js==='object'&&!js.szenen&&!js.scenes){
+    const k=Object.keys(js);
+    if(k.length===1&&typeof js[k[0]]==='object')js=js[k[0]]; // entpacken z.B. {"skript":{...}}
+  }
+  const pick=(...keys)=>{for(const k of keys)if(js[k]!=null)return js[k];return null;};
+  let szenen=pick('szenen','scenes','abschnitte','parts')||[];
+  szenen=szenen.map(s=>{
+    if(typeof s==='string')return {text:s,bild:c.img};
+    return {text:s.text||s.szene||s.content||s.narration||'',bild:s.bild||s.image||s.prompt||s.img||c.img};
+  }).filter(s=>s.text&&s.text.length>10).slice(0,5);
+  const out={
+    hook:pick('hook','einstieg','intro')||'',
+    szenen,
+    frage:pick('frage','question','cta')||'Was glaubst du, ist wirklich passiert? Schreib deine Theorie in die Kommentare.',
+    titel:pick('titel','title')||`${c.name}: Der Fall, den niemand erklären kann`,
+    seo_titel:pick('seo_titel','seoTitel','seo_title')||`${c.name} (${c.jahr}) – was geschah wirklich? #truecrime`,
+    beschreibung:pick('beschreibung','description')||`Der Fall ${c.name} (${c.ort}, ${c.jahr}) gibt Ermittlern bis heute Rätsel auf. Was glaubst du?`,
+    hashtags:pick('hashtags','tags')||['#truecrime','#ungelöst','#spurlos','#vermisst','#mysteriös','#wahrefälle','#shorts','#doku'],
+    stimmung:(()=>{const s=String(pick('stimmung','mood')||'').toLowerCase();
+      return ['spannung','melancholisch','unheimlich','mysterioes'].find(m=>s.includes(m.slice(0,6)))||'mysterioes';})()
+  };
+  if(!out.hook&&out.szenen.length){out.hook=out.szenen[0].text;out.szenen=out.szenen.slice(1);}
+  if(!out.hook||out.szenen.length<2)return null; // wirklich unbrauchbar → neuer Versuch
+  return out;
+}
+
+async function groqScript(prompt){
+  const key=$('groqKey').value.trim();
+  if(!key)throw new Error('kein Groq-Key');
+  const r=await retryFetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}})
+  },1,'Skript-KI (Groq, eigene Infrastruktur)');
+  const j=await r.json();
+  return j?.choices?.[0]?.message?.content||'';
+}
+async function geminiScript(prompt){
+  const key=$('geminiKey').value.trim();
+  if(!key)throw new Error('kein Gemini-Key');
+  const models=['gemini-3.5-flash-lite','gemini-3.6-flash','gemini-3.7-flash']; // FIX: 'gemini-3-flash' existierte gar nicht (fehlender Punkt) → lief immer sofort auf HTTP 404, verschenkte Stufe
+  let lastErr;
+  for(const m of models){
+    try{
+      const r=await retryFetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{
+        method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+      },1,'Gemini ('+m+')');
+      const j=await r.json();
+      const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+      if(txt)return txt;
+      lastErr=new Error('Gemini ('+m+'): leere Antwort');
+    }catch(e){lastErr=e;log('Gemini-Modell '+m+': '+e.message+' → nächstes …','err');}
+  }
+  throw lastErr;
+}
+
+async function generateScriptRobust(c,hook){
+  const prompt=buildPrompt(c,hook);
+  let lastErr=new Error('Skript unvollständig'),best=null,bestWords=0;
+  // Kostenloser Premium-Pfad: Gemini (wenn Key hinterlegt, kein Guthaben nötig)
+  if($('geminiKey').value.trim()){
+    let gBest=null,gBestWords=0;
+    for(let ga=1;ga<=2;ga++){
+      try{
+        const raw=await geminiScript(prompt);
+        const js=repairJSON(raw);
+        const norm=js?normalizeScript(js,c):null;
+        if(norm){
+          const words=(norm.hook+' '+norm.szenen.map(s=>s.text).join(' ')+' '+norm.frage).split(/\s+/).length;
+          if(words>=45&&words<=78){log('Skript: Gemini ✓ (kostenlos)','ok');return norm;}
+          if(!gBest||Math.abs(words-60)<Math.abs(gBestWords-60)){gBest=norm;gBestWords=words;}
+          log('Gemini-Skript '+words+' W. außerhalb Ideal → Feinversuch …','err');
+        }
+      }catch(e){lastErr=e;log('Gemini-API: '+e.message+' → '+(ga<2?'zweiter Versuch …':'Gratis-Kette übernimmt …'),'err');}
+    }
+    if(gBest){log('Nutze Gemini-Skript ('+gBestWords+' W.).','ok');return gBest;}
+  }
+  // Zweite unabhängige Gratis-Stufe: Groq (eigene Infrastruktur – läuft weiter, selbst wenn Google/Pollinations gerade Probleme haben)
+  if($('groqKey').value.trim()){
+    let qBest=null,qBestWords=0;
+    for(let qa=1;qa<=2;qa++){
+      try{
+        const raw=await groqScript(prompt);
+        const js=repairJSON(raw);
+        const norm=js?normalizeScript(js,c):null;
+        if(norm){
+          const words=(norm.hook+' '+norm.szenen.map(s=>s.text).join(' ')+' '+norm.frage).split(/\s+/).length;
+          if(words>=45&&words<=78){log('Skript: Groq ✓ (kostenlos)','ok');return norm;}
+          if(!qBest||Math.abs(words-60)<Math.abs(qBestWords-60)){qBest=norm;qBestWords=words;}
+          log('Groq-Skript '+words+' W. außerhalb Ideal → Feinversuch …','err');
+        }
+      }catch(e){lastErr=e;log('Groq-API: '+e.message+' → '+(qa<2?'zweiter Versuch …':'Pollinations-Kette übernimmt …'),'err');}
+    }
+    if(qBest){log('Nutze Groq-Skript ('+qBestWords+' W.).','ok');return qBest;}
+  }
+  for(let att=1;att<=3;att++){
+    const order=[0,1,2].map(i=>(i+att-1)%3); // pro Runde anderer Start-Endpunkt
+    for(const oi of order){
+      const seed=Math.floor(Math.random()*1e6);
+      let raw=null;
+      try{raw=await fetchScriptRaw(oi,prompt,seed);}
+      catch(e){lastErr=e;log('Endpunkt '+(oi+1)+' nicht erreichbar → nächster …','err');continue;}
+      if(!raw||raw.length<50){log('Endpunkt '+(oi+1)+': leere Antwort → nächster …','err');continue;}
+      const js=repairJSON(raw);
+      if(!js){log('Endpunkt '+(oi+1)+': kein reparierbares JSON → nächster …','err');continue;}
+      const norm=normalizeScript(js,c);
+      if(!norm){log('Endpunkt '+(oi+1)+': Inhalt unbrauchbar → nächster …','err');continue;}
+      const words=(norm.hook+' '+norm.szenen.map(s=>s.text).join(' ')+' '+norm.frage).split(/\s+/).length;
+      if(words>=45&&words<=78)return norm; // Volltreffer
+      if(!best||Math.abs(words-110)<Math.abs(bestWords-110)){best=norm;bestWords=words;} // bester Notnagel
+      log('Endpunkt '+(oi+1)+': Länge '+words+' W. außerhalb 45-78 → nächster …','err');
+    }
+    if(att<3){log('Runde '+att+': kein Volltreffer → neue Runde …','err');await sleep(2000);}
+  }
+  if(best){log('Nutze bestes verfügbares Skript ('+bestWords+' W.).','err');return best;}
+  throw lastErr;
+}
+
+/* ---------------- TTS (ElevenLabs + Fallback) – Voice-ID wird HIER frisch gelesen ---------------- */
+function currentVoiceId(){
+  const sel=$('voiceSelect').value;
+  return sel==='custom' ? ($('customVoice').value.trim()||'onwK4e9ZLuTAKqWW03F9') : sel;
+}
+/* Jahreszahlen für die Sprachausgabe korrekt aussprechen (Bug: TTS liest "1922" oft als "eins-neun-zwei-zwei") */
+const EINER=['','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun'];
+const TEENS=['zehn','elf','zwölf','dreizehn','vierzehn','fünfzehn','sechzehn','siebzehn','achtzehn','neunzehn'];
+const ZEHNER=[null,null,'zwanzig','dreißig','vierzig','fünfzig','sechzig','siebzig','achtzig','neunzig'];
+function zweistelligWort(n){
+  if(n===0)return '';
+  if(n<10)return EINER[n];
+  if(n<20)return TEENS[n-10];
+  const z=Math.floor(n/10),e=n%10;
+  return e===0?ZEHNER[z]:(e===1?'ein':EINER[e])+'und'+ZEHNER[z];
+}
+function jahrWort(jahr){
+  if(jahr>=2000&&jahr<=2099)return 'zweitausend'+zweistelligWort(jahr-2000);
+  if(jahr>=1100&&jahr<=1999){
+    const hunderter=Math.floor(jahr/100),rest=jahr%100;
+    return TEENS[hunderter-10]+'hundert'+zweistelligWort(rest);
+  }
+  return String(jahr);
+}
+function zahlWort(n){ // 0-99 vollständig, inkl. 'null' (für Uhrzeiten/allgemeine Zahlen)
+  if(n===0)return 'null';
+  if(n<10)return EINER[n];
+  if(n<20)return TEENS[n-10];
+  const z=Math.floor(n/10),e=n%10;
+  return e===0?ZEHNER[z]:(e===1?'ein':EINER[e])+'und'+ZEHNER[z];
+}
+function zahlBis999(n){
+  if(n===0)return 'null';
+  const h=Math.floor(n/100),rest=n%100;
+  if(h===0)return zahlWort(rest);
+  const hWort=(h===1?'':EINER[h])+'hundert'; // 'hundert' statt 'einhundert' – klingt natürlicher gesprochen
+  return rest===0?hWort:hWort+zahlWort(rest);
+}
+function zahlGross(n){ // für Tausenderzahlen mit Punkt-Trennung, z.B. 300.000
+  if(n===0)return 'null';
+  if(n>=1000000){
+    const mio=Math.floor(n/1000000),rest=n%1000000;
+    const mioWort=mio===1?'eine Million':zahlBis999(mio)+' Millionen';
+    return rest===0?mioWort:mioWort+' '+zahlGross(rest);
+  }
+  const tsd=Math.floor(n/1000),rest=n%1000;
+  if(tsd===0)return zahlBis999(rest);
+  const tsdWort=(tsd===1?'':zahlBis999(tsd))+'tausend'; // 'tausend' statt 'eintausend'
+  return rest===0?tsdWort:tsdWort+zahlBis999(rest);
+}
+function enforceWordBudget(script,maxWords){
+  const wc=s=>(s||'').trim().split(/\s+/).filter(Boolean).length;
+  const hookW=wc(script.hook),frageW=wc(script.frage);
+  const budget=maxWords-hookW-frageW;
+  const szenen=[];let used=0;
+  for(const s of script.szenen){
+    const w=wc(s.text);
+    if(used+w<=budget||szenen.length<2){szenen.push(s);used+=w;}
+    else break;
+  }
+  return {...script,szenen};
+}
+function textFuerSprache(text){
+  // 1) Uhrzeiten (23:47 [Uhr] → "dreiundzwanzig Uhr siebenundvierzig")
+  text=text.replace(/\b([01]?[0-9]|2[0-3]):([0-5][0-9])\b(\s*Uhr)?/g,(m,hh,mm)=>{
+    const h=parseInt(hh,10),mi=parseInt(mm,10);
+    return mi===0?zahlWort(h)+' Uhr':zahlWort(h)+' Uhr '+zahlWort(mi);
+  });
+  // 2) Jahreszahlen (1922 → "neunzehnhundertzweiundzwanzig")
+  text=text.replace(/\b(1[1-9][0-9]{2}|20[0-9]{2})\b/g,m=>jahrWort(parseInt(m,10)));
+  // 3) Große Zahlen mit Tausenderpunkt (300.000 → "dreihunderttausend")
+  text=text.replace(/\b\d{1,3}(?:\.\d{3})+\b/g,m=>zahlGross(parseInt(m.replace(/\./g,''),10)));
+  return text;
+}
+function b64ToArrayBuffer(b64){
+  const bin=atob(b64);const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return arr.buffer;
+}
+async function tts(text){
+  text=textFuerSprache(text);
+  const key=$('elKey').value.trim();
+  if(key){
+    const vid=currentVoiceId(); // Fix: bei jedem Call aktuell, nie gecached
+    try{
+      // /with-timestamps statt normalem Endpunkt: liefert echte Zeichen-Zeitstempel mit, damit die
+      // Untertitel exakt zur Stimme passen, statt nur nach Textlänge geschätzt zu werden (FIX: Drift ab ~10-14s).
+      const r=await retryFetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(vid)}/with-timestamps?output_format=mp3_44100_128`,{
+        method:'POST',
+        headers:{'xi-api-key':key,'Content-Type':'application/json'},
+        body:JSON.stringify({text,model_id:'eleven_multilingual_v2',
+          voice_settings:{stability:0.55,similarity_boost:0.8,style:0.3,use_speaker_boost:true}})
+      },2,'ElevenLabs');
+      const j=await r.json();
+      log('Stimme: ElevenLabs · '+vid.slice(0,6)+'… (mit exaktem Zeit-Alignment)','ok');
+      return {buf:b64ToArrayBuffer(j.audio_base64),alignment:j.alignment||null};
+    }catch(e){log('ElevenLabs fehlgeschlagen ('+e.message+') → Fallback','err');}
+  }
+  // Authentifizierte Pollinations-Audio-Route zuerst (Key-basiert, nicht IP-limitiert) – die alte anonyme
+  // text.pollinations.ai-Route ist wie bei Skript/Bild inzwischen stark ratelimitiert/instabil.
+  const polli=$('polliKey').value.trim();
+  if(polli){
+    try{
+      const r=await retryFetch('https://gen.pollinations.ai/audio/'+encodeURIComponent(text)+'?voice=onyx',{
+        headers:{'Authorization':'Bearer '+polli}
+      },2,'Fallback-TTS (authentifiziert)');
+      log('Stimme: Gratis-Fallback, authentifiziert (onyx)','ok');
+      return {buf:await r.arrayBuffer(),alignment:null}; // kein Zeit-Alignment verfügbar → Schätzung als Rückfall
+    }catch(e){log('Authentifizierte Fallback-Stimme down ('+e.message+') → letzter Notnagel (anonym) …','err');}
+  }
+  const r=await retryFetch('https://text.pollinations.ai/'+encodeURIComponent(text)+'?model=openai-audio&voice=onyx',{},2,'Fallback-TTS (anonym)');
+  log('Stimme: Gratis-Fallback, anonym (onyx)','ok');
+  return {buf:await r.arrayBuffer(),alignment:null};
+}
+
+/* ---------------- BILDER (Pollinations, dokumentarischer Look) ---------------- */
+const IMG_STYLE=', dark documentary photograph, 1990s case file photo, desaturated muted colors, heavy film grain, cinematic shadows, high detail, no text, no watermark, no recognizable real person face';
+function b64ToBlob(b64,mime){
+  const bin=atob(b64);const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime||'image/png'});
+}
+async function geminiImage(prompt){
+  const key=$('geminiKey').value.trim();
+  if(!key)throw new Error('kein Gemini-Key für Bild-Stufe 4');
+  const r=await retryFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent',{
+    method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseModalities:['IMAGE']}})
+  },2,'Bild-KI (Gemini Nano Banana)');
+  const j=await r.json();
+  const part=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData);
+  if(!part)throw new Error('Gemini: kein Bild in der Antwort');
+  return await createImageBitmap(b64ToBlob(part.inlineData.data,part.inlineData.mimeType));
+}
+async function huggingFaceImage(prompt){
+  const key=$('hfKey').value.trim();
+  if(!key)throw new Error('kein Hugging-Face-Token');
+  // FIX: api-inference.huggingface.co wurde von Hugging Face dauerhaft abgeschaltet (Nov. 2025) –
+  // seitdem läuft alles über den neuen "Inference Providers"-Router. Alte Adresse = sofortiger Fehlschlag.
+  const r=await retryFetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell',{
+    method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({inputs:prompt})
+  },2,'Bild-KI (Hugging Face FLUX)');
+  return await createImageBitmap(await r.blob());
+}
+async function cloudflareImage(prompt){
+  const acc=$('cfAccountId').value.trim(),tok=$('cfApiToken').value.trim();
+  if(!acc||!tok)throw new Error('kein Cloudflare-Zugang hinterlegt');
+  const r=await retryFetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/ai/run/@cf/black-forest-labs/flux-1-schnell`,{
+    method:'POST',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+    body:JSON.stringify({prompt,num_steps:4}) // num_steps ist bei Flux Schnell PFLICHT, sonst HTTP-Fehler (Cloudflare-Dokulücke)
+  },2,'Bild-KI (Cloudflare Workers AI)');
+  const ct=r.headers.get('content-type')||'';
+  if(ct.includes('application/json')){
+    // manche Konten/Regionen liefern JSON mit base64 statt roher Bild-Antwort
+    const j=await r.json();
+    const b64=j.result?.image;
+    if(!b64)throw new Error('Cloudflare: kein Bild in Antwort ('+JSON.stringify(j).slice(0,150)+')');
+    return await createImageBitmap(b64ToBlob(b64,'image/png'));
+  }
+  return await createImageBitmap(await r.blob());
+}
+async function genImage(prompt,seed,preferIdx=0){
+  const full=encodeURIComponent(prompt+IMG_STYLE);
+  const polli=$('polliKey').value.trim();
+  const cfAcc=$('cfAccountId').value.trim(),cfTok=$('cfApiToken').value.trim();
+  // HINWEIS: Hugging Face (hf-inference) wurde im Juli 2026 als Bild-Stufe komplett eingestellt – FLUX läuft
+  // dort nicht mehr (HTTP 410, "deprecated and no longer supported"), betrifft alle FLUX-Varianten, nicht
+  // reparierbar durch einen URL-Fix wie bei der letzten Migration. Deshalb aus der aktiven Kette entfernt,
+  // um nicht bei jedem Bild eine garantiert tote Anfrage zu verschwenden.
+  // Gamechanger: Reihenfolge der Anbieter rotiert pro Bild, damit mehrere Bilder gleichzeitig
+  // nicht alle denselben Anbieter gleichzeitig bombardieren – verteilt die Last automatisch.
+  const tiers=[
+    ...(cfAcc&&cfTok?[{name:'Cloudflare Workers AI',fn:async()=>cloudflareImage(prompt+IMG_STYLE)}]:[]), // eigene, unabhängige Infrastruktur – nicht Google, nicht Pollinations
+    {name:'Flux (anonym)',fn:async()=>{
+      const url=`https://image.pollinations.ai/prompt/${full}?width=1080&height=1920&nologo=true&model=flux&seed=${seed}`;
+      const r=await retryFetch(url,{},2,'Bild-KI (flux)');
+      return await createImageBitmap(await r.blob());
+    }},
+    ...(polli?[{name:'Pollinations (authentifiziert)',fn:async()=>{
+      const url=`https://gen.pollinations.ai/image/${full}?model=flux&width=1080&height=1920&seed=${seed}`; // FIX: 'zimage' war für diesen API-Key nicht freigeschaltet (HTTP 403) – 'flux' ist der garantiert freie Standard
+      const r=await retryFetch(url,{headers:{'Authorization':'Bearer '+polli}},2,'Bild-KI (gen.pollinations, authentifiziert)');
+      return await createImageBitmap(await r.blob());
+    }}]:[]),
+    {name:'Pollinations (auto)',fn:async()=>{
+      const url=`https://image.pollinations.ai/prompt/${full}?width=1080&height=1920&nologo=true&seed=${seed}`;
+      const r=await retryFetch(url,{},2,'Bild-KI (auto)');
+      return await createImageBitmap(await r.blob());
+    }}
+  ];
+  const off=preferIdx%tiers.length;
+  const rotated=[...tiers.slice(off),...tiers.slice(0,off)];
+  for(const t of rotated){
+    try{return await t.fn();}
+    catch(e){log(t.name+' nicht verfügbar ('+e.message+') → nächste Stufe …','err');} // FIX: echter Fehlergrund ging bisher verloren, nur "nicht verfügbar" ohne Details
+  }
+  log('Alle Pollinations-Stufen down → letzte KI-Stufe: Gemini Nano Banana …','err');
+  return await geminiImage(prompt+IMG_STYLE);
+}
+async function placeholderImage(){
+  // Letzte Absicherung: selbst gezeichnetes Akten-Bild, kann nie fehlschlagen
+  const c=document.createElement('canvas');c.width=1080;c.height=1920;
+  const g=c.getContext('2d');
+  g.fillStyle='#0B0D10';g.fillRect(0,0,1080,1920);
+  const grad=g.createRadialGradient(540,960,250,540,960,1300);
+  grad.addColorStop(0,'rgba(196,43,28,.14)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=grad;g.fillRect(0,0,1080,1920);
+  g.strokeStyle='rgba(196,43,28,.4)';g.lineWidth=6;
+  g.strokeRect(150,780,780,360);
+  g.fillStyle='rgba(233,228,216,.3)';g.font='700 64px system-ui,sans-serif';
+  g.textAlign='center';g.textBaseline='middle';
+  g.fillText('AKTE',540,960);
+  return await createImageBitmap(c);
+}
+async function loadImages(c,script){
+  const seedBase=Math.floor(Math.random()*1e6);
+  const prompts=[c.img,...script.szenen.map(s=>s.bild)];
+  const total=prompts.length,results=new Array(total);
+  // Gamechanger: 2 Bilder gleichzeitig generieren (mit rotierendem bevorzugten Anbieter, siehe genImage),
+  // statt stur nacheinander mit fester 4s-Pause – deutlich schneller bei mehr Bildern, gleiches Rate-Limit-Risiko
+  // pro Anbieter, weil die beiden gleichzeitigen Anfragen i.d.R. verschiedene Anbieter zuerst versuchen.
+  const CHUNK=2;
+  for(let start=0;start<total;start+=CHUNK){
+    const idxs=[];
+    for(let i=start;i<Math.min(start+CHUNK,total);i++)idxs.push(i);
+    await Promise.all(idxs.map(async i=>{
+      try{
+        results[i]=await genImage(prompts[i],seedBase+i,i);
+      }catch(e){
+        const ersatz=results.find(Boolean);
+        if(ersatz){log('Bild '+(i+1)+' aufgegeben → Ersatzbild wird wiederverwendet','err');results[i]=ersatz;}
+        else{log('Bild '+(i+1)+': alle Quellen down → Akten-Platzhalter (Video läuft trotzdem durch)','err');results[i]=await placeholderImage();}
+      }
+    }));
+    const fertig=Math.min(start+CHUNK,total);
+    setStep('bilder','run',fertig+'/'+total);setBar(0.2+0.5*(fertig/total));
+    if(start+CHUNK<total)await sleep(2500); // kürzere Pause zwischen Zweier-Batches statt vor jedem Einzelbild
+  }
+  return {cover:results[0],scenes:results.slice(1)};
+}
+
+/* ---------------- AUDIO DECODE & TIMING ---------------- */
+async function decodeAudio(buf,ctx){return await ctx.decodeAudioData(buf.slice(0));}
+
+function buildTimeline(script,dur,alignment){
+  // Erzähltext-Blöcke → Zeitanteile nach Zeichenlänge
+  const blocks=[{key:'hook',text:script.hook}];
+  script.szenen.forEach((s,i)=>blocks.push({key:'szene'+i,text:s.text,scene:i}));
+  blocks.push({key:'frage',text:script.frage});
+  const total=blocks.reduce((a,b)=>a+b.text.length+12,0);
+  let t=0;
+  blocks.forEach(b=>{b.start=t;b.dur=dur*((b.text.length+12)/total);t+=b.dur;});
+  // Wort-Timings für Karaoke-Captions: echtes Zeichen-Alignment von ElevenLabs nutzen, wenn vorhanden
+  // (FIX: die reine Zeichenlängen-Schätzung driftete im Video zunehmend auseinander, da Sprechtempo/Pausen
+  // nicht wirklich proportional zur Textlänge sind). Ohne Alignment (Fallback-Stimmen) bleibt die Schätzung.
+  if(alignment&&alignment.characters&&alignment.characters.length){
+    const chars=alignment.characters,cs=alignment.character_start_times_seconds,ce=alignment.character_end_times_seconds;
+    // Zeiger durch den Alignment-Zeichenstrom, synchron zum zusammengesetzten Text (identischer String, der an ElevenLabs ging)
+    // FIX: textFuerSprache() schreibt Daten/Jahreszahlen/Uhrzeiten vor dem Senden in Sprech-Form um
+    // ("1996" → "neunzehnhundertsechsundneunzig") – das Alignment gehört zu DIESEM Text, nicht zum
+    // Original-Skripttext. Ohne diese Umwandlung hier lief der Zeiger ab der ersten Zahl komplett auseinander.
+    let ci=0;
+    const words=[];
+    blocks.forEach(b=>{
+      const ws=textFuerSprache(b.text).split(/\s+/).filter(Boolean);
+      ws.forEach(w=>{
+        // führende Leerzeichen im Alignment-Strom überspringen, dann w.length Zeichen konsumieren
+        while(ci<chars.length&&/\s/.test(chars[ci]))ci++;
+        const wStart=ci<chars.length?cs[ci]:(words.length?words[words.length-1].end:0);
+        let consumed=0,wEnd=wStart;
+        while(ci<chars.length&&consumed<w.length){wEnd=ce[ci];ci++;consumed++;}
+        words.push({w,start:wStart,end:wEnd});
+      });
+    });
+    if(words.length)return {blocks,words};
+  }
+  const words=[];
+  blocks.forEach(b=>{
+    const ws=b.text.split(/\s+/).filter(Boolean);
+    const wTotal=ws.reduce((a,w)=>a+w.length+1,0);
+    let wt=b.start;
+    ws.forEach(w=>{const d=b.dur*((w.length+1)/wTotal);words.push({w,start:wt,end:wt+d});wt+=d;});
+  });
+  return {blocks,words};
+}
+
+/* ---------------- RENDERER (1080x1920, Ken Burns, Karaoke-Captions, Grain) ---------------- */
+const stage=$('stage'),ctx2d=stage.getContext('2d');
+const W=1080,H=1920;
+
+// vorgerendertes Korn
+const grain=document.createElement('canvas');grain.width=270;grain.height=480;
+(()=>{const g=grain.getContext('2d'),d=g.createImageData(270,480);
+for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=22;}
+g.putImageData(d,0,0);})();
+
+function fitCover(img){
+  const s=Math.max(W/img.width,H/img.height);
+  return {dw:img.width*s,dh:img.height*s};
+}
+function drawScene(img,t,dir,punch=0){ // t 0..1 innerhalb der Szene, punch = kurzer Zoom-Kick bei Fakten-/Textwechsel
+  const z=1.06+0.13*t+punch;
+  const {dw,dh}=fitCover(img);
+  const ox=(dir%2?1:-1)*t*40, oy=(dir<2?1:-1)*t*30;
+  ctx2d.save();
+  ctx2d.translate(W/2+ox,H/2+oy);ctx2d.scale(z,z);
+  ctx2d.drawImage(img,-dw/2,-dh/2,dw,dh);
+  ctx2d.restore();
+}
+function vignette(){
+  const g=ctx2d.createRadialGradient(W/2,H/2,H*0.32,W/2,H/2,H*0.75);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,0.62)');
+  ctx2d.fillStyle=g;ctx2d.fillRect(0,0,W,H);
+}
+function wrapText(words,maxW,font){
+  ctx2d.font=font;const lines=[];let line=[];
+  words.forEach(wo=>{
+    const test=[...line,wo].map(x=>x.w).join(' ');
+    if(ctx2d.measureText(test).width>maxW&&line.length){lines.push(line);line=[wo];}
+    else line.push(wo);
+  });
+  if(line.length)lines.push(line);
+  return lines;
+}
+function buildCaptionChunks(words,chunkSize){
+  // FIX: feste Textblöcke statt gleitendem Wort-Fenster – ruhiger, besser lesbar (Nutzer-Feedback: "zu schnell")
+  const chunks=[];
+  for(let i=0;i<words.length;i+=chunkSize){
+    const grp=words.slice(i,i+chunkSize);
+    chunks.push({words:grp,start:grp[0].start,end:grp[grp.length-1].end});
+  }
+  const FLOOR=1.2; // Mindestanzeigedauer pro Block in Sekunden
+  for(let i=0;i<chunks.length;i++){
+    if(chunks[i].end-chunks[i].start<FLOOR){
+      const nextStart=chunks[i+1]?chunks[i+1].start:Infinity;
+      chunks[i].end=Math.min(chunks[i].start+FLOOR,nextStart-0.05);
+    }
+  }
+  if(chunks.length)chunks[chunks.length-1].end=Infinity; // letzter Block bleibt bis zum Ende sichtbar
+  return chunks;
+}
+function drawCaptions(chunks,now){
+  const chunk=chunks.find(c=>now>=c.start&&now<c.end);
+  if(!chunk)return;
+  const font='700 62px system-ui,sans-serif';
+  const lines=wrapText(chunk.words,W-160,font);
+  const lh=84,baseY=H*0.62-(lines.length-1)*lh; // sichere Zone: YouTube-UI belegt untere ~25%
+  ctx2d.textAlign='center';ctx2d.textBaseline='middle';ctx2d.font=font;
+  lines.forEach((ln,li)=>{
+    const total=ctx2d.measureText(ln.map(x=>x.w).join(' ')).width;
+    let x=W/2-total/2;
+    ln.forEach(wo=>{
+      const wW=ctx2d.measureText(wo.w).width;
+      const active=now>=wo.start&&now<wo.end;
+      ctx2d.save();
+      ctx2d.shadowColor='rgba(0,0,0,.95)';ctx2d.shadowBlur=14;ctx2d.shadowOffsetY=3;
+      ctx2d.fillStyle=active?'#FF4A33':'#F2EEE4';
+      ctx2d.fillText(wo.w,x+wW/2,baseY+li*lh);
+      ctx2d.restore();
+      x+=wW+ctx2d.measureText(' ').width;
+    });
+  });
+}
+function drawHUD(c,now,dur){
+  ctx2d.save();
+  ctx2d.font='600 30px ui-monospace,monospace';ctx2d.textAlign='left';ctx2d.textBaseline='top';
+  ctx2d.fillStyle='rgba(233,228,216,.55)';
+  ctx2d.fillText('AKTE #'+String(c.id).padStart(3,'0')+' · '+c.jahr,54,64);
+  ctx2d.textAlign='right';
+  ctx2d.fillStyle='rgba(196,43,28,.85)';
+  ctx2d.fillText('SPURLOS',W-54,64);
+  ctx2d.restore();
+}
+function drawStamp(text,x,y,scale,alpha){
+  ctx2d.save();
+  ctx2d.translate(x,y);ctx2d.rotate(-0.10);ctx2d.scale(scale,scale);
+  ctx2d.globalAlpha=alpha;
+  ctx2d.font='700 92px ui-monospace,monospace';
+  ctx2d.textAlign='center';ctx2d.textBaseline='middle';
+  const w=ctx2d.measureText(text).width;
+  ctx2d.strokeStyle='#D93A28';ctx2d.lineWidth=10;
+  ctx2d.strokeRect(-w/2-44,-84,w+88,168);
+  ctx2d.fillStyle='#D93A28';
+  ctx2d.fillText(text,0,6);
+  ctx2d.restore();
+}
+function drawFitTitle(nm,cx,cy){
+  // Zeigt den Fallnamen so groß wie möglich, aber garantiert innerhalb des Bildrands.
+  // Erst Schriftgröße stufenweise verkleinern, danach nötigenfalls auf 2 Zeilen umbrechen.
+  const maxW=W*0.88; // Sicherheitsrand links/rechts
+  let size=108;
+  ctx2d.textAlign='center';
+  ctx2d.font='700 '+size+'px system-ui,sans-serif';
+  while(size>50&&ctx2d.measureText(nm).width>maxW){size-=4;ctx2d.font='700 '+size+'px system-ui,sans-serif';}
+  if(ctx2d.measureText(nm).width<=maxW){ctx2d.fillText(nm,cx,cy);return;}
+  // Passt auch bei kleinster Größe nicht auf eine Zeile → auf 2 Zeilen umbrechen (an Wortgrenze nahe der Mitte)
+  const words=nm.split(' ');
+  let bestSplit=Math.ceil(words.length/2),bestDiff=Infinity;
+  for(let i=1;i<words.length;i++){
+    const l1=words.slice(0,i).join(' ').length,l2=words.slice(i).join(' ').length;
+    const diff=Math.abs(l1-l2);
+    if(diff<bestDiff){bestDiff=diff;bestSplit=i;}
+  }
+  const line1=words.slice(0,bestSplit).join(' '),line2=words.slice(bestSplit).join(' ');
+  size=88;ctx2d.font='700 '+size+'px system-ui,sans-serif';
+  while(size>44&&(ctx2d.measureText(line1).width>maxW||ctx2d.measureText(line2).width>maxW)){size-=4;ctx2d.font='700 '+size+'px system-ui,sans-serif';}
+  ctx2d.fillText(line1,cx,cy-size*0.55);
+  ctx2d.fillText(line2,cx,cy+size*0.55);
+}
+function drawCover(c,img,now){
+  drawScene(img,Math.min(now/2.5,1)*0.35,0);
+  ctx2d.fillStyle='rgba(5,6,8,.45)';ctx2d.fillRect(0,0,W,H);
+  vignette();
+  ctx2d.save();
+  ctx2d.textAlign='center';
+  ctx2d.fillStyle='rgba(233,228,216,.7)';ctx2d.font='600 34px ui-monospace,monospace';
+  ctx2d.fillText(c.ort.toUpperCase()+' · '+c.jahr,W/2,H*0.30);
+  ctx2d.fillStyle='#F2EEE4';
+  ctx2d.shadowColor='rgba(0,0,0,.9)';ctx2d.shadowBlur=20;
+  drawFitTitle(c.name.toUpperCase(),W/2,H*0.30+120); // FIX: echte Breitenmessung statt fixer Größe – lief bei langen Namen aus dem Bild
+  ctx2d.restore();
+  const pulse=1+0.03*Math.sin(now*5);
+  drawStamp(c.status,W/2,H*0.30+300,pulse,0.95);
+}
+function drawEndCard(c,img,frage,t){
+  drawScene(img,0.5,2);
+  ctx2d.fillStyle='rgba(5,6,8,.72)';ctx2d.fillRect(0,0,W,H);
+  vignette();
+  ctx2d.save();ctx2d.textAlign='center';
+  const fade=Math.min(1,(t||1)/0.4); // FIX (Nutzer-Feedback): sanfter Einblenden statt abruptem Reinspringen,
+  ctx2d.globalAlpha=fade;            // damit es nicht mit dem letzten Untertitel der Vorszene kollidiert
+  ctx2d.fillStyle='#D93A28';ctx2d.font='700 60px ui-monospace,monospace';
+  ctx2d.fillText('WAS GLAUBST DU?',W/2,H*0.24);
+  ctx2d.fillStyle='#F2EEE4';ctx2d.font='600 46px system-ui,sans-serif';
+  ctx2d.fillText('↓ Schreib es in die Kommentare ↓',W/2,H*0.24+80);
+  ctx2d.fillStyle='rgba(233,228,216,.85)';ctx2d.font='600 40px system-ui,sans-serif';
+  const subCTAs=[
+    '➕ Abonniere – jeden Tag eine neue Akte',
+    '➕ Willst du wissen, wie sowas endet? Abonnieren',
+    '➕ Neue ungelöste Fälle – täglich hier',
+    '➕ Abonniere für den nächsten Cold Case'
+  ];
+  ctx2d.fillText(subCTAs[c.id%subCTAs.length],W/2,H*0.24+300);
+  ctx2d.restore();
+}
+
+/* ---------------- AUFNAHME (MediaRecorder OHNE timeslice) ---------------- */
+function pickMime(){
+  const c=['video/mp4;codecs=avc1,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'];
+  return c.find(m=>MediaRecorder.isTypeSupported(m))||'';
+}
+async function renderVideo(c,script,audioResult,coverImg,sceneImgs){
+  const {buf:audioBuf,alignment}=audioResult;
+  const actx=new (window.AudioContext||window.webkitAudioContext)();
+  const decoded=await decodeAudio(audioBuf,actx);
+  const dur=decoded.duration;
+  const {words}=buildTimeline(script,dur,alignment);
+  const captionChunks=buildCaptionChunks(words,4);
+
+  // Szenen-Zeitfenster: Cover(hook) → Szenenbilder → Endcard(frage)
+  const blocks=[{img:'cover'}];
+  const hookLen=script.hook.length+12, frageLen=script.frage.length+12;
+  const sceneLens=script.szenen.map(s=>s.text.length+12);
+  const total=hookLen+frageLen+sceneLens.reduce((a,b)=>a+b,0);
+  let t=dur*hookLen/total;
+  const coverEnd=Math.min(2.0,t); // Analytics-Fix: Titelkarte max. 2s, dann Bewegung
+  const segs=[{type:'cover',start:0,end:coverEnd}];
+  if(t>coverEnd+0.1)segs.push({type:'scene',i:0,start:coverEnd,end:t});
+  script.szenen.forEach((s,i)=>{const d=dur*sceneLens[i]/total;segs.push({type:'scene',i,start:t,end:t+d});t+=d;});
+  segs.push({type:'end',start:t,end:dur+0.4});
+
+  // Streams koppeln
+  const vStream=stage.captureStream(30);
+  const dest=actx.createMediaStreamDestination();
+  const src=actx.createBufferSource();src.buffer=decoded;src.connect(dest);
+
+  // Ambient-Drone (dunkel, subtil) – prozedural, copyrightfrei
+  const droneGain=actx.createGain();droneGain.gain.value=0.045;droneGain.connect(dest);
+  const o1=actx.createOscillator();o1.type='sine';o1.frequency.value=55;
+  const o2=actx.createOscillator();o2.type='sine';o2.frequency.value=55.7; // Schwebung
+  o1.connect(droneGain);o2.connect(droneGain);
+  const nBuf=actx.createBuffer(1,actx.sampleRate*2,actx.sampleRate);
+  const nd=nBuf.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const noise=actx.createBufferSource();noise.buffer=nBuf;noise.loop=true;
+  const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=320;
+  const nGain=actx.createGain();nGain.gain.value=0.018;
+  noise.connect(lp);lp.connect(nGain);nGain.connect(dest);
+  // Puls alle ~1,6s
+  const pulse=actx.createOscillator();pulse.type='sine';pulse.frequency.value=48;
+  const pGain=actx.createGain();pGain.gain.value=0;
+  pulse.connect(pGain);pGain.connect(dest);
+  // Atmosphäre: KI wählt die Stimmung pro Fall (script.stimmung)
+  const MOODS={
+    spannung:{chords:null,pulse:1.4,drone:0.052},
+    melancholisch:{chords:[[110,130.81,164.81],[87.31,110,130.81]],pulse:0,drone:0.034},
+    unheimlich:{chords:[[110,164.81,233.08],[103.83,155.56,207.65]],pulse:2.4,drone:0.05},
+    mysterioes:{chords:[[110,130.81,164.81],[98,123.47,146.83]],pulse:1.8,drone:0.042}
+  };
+  const mood=MOODS[script.stimmung]||MOODS.mysterioes;
+  const droneBase=mood.drone;
+  droneGain.gain.value=droneBase;
+  // Musik-Pad: dunkle Akkorde im Wechsel (prozedural, copyrightfrei)
+  const padOscs=[],chordGains=[];
+  if(mood.chords){const CHORDS=mood.chords;
+    const lp2=actx.createBiquadFilter();lp2.type='lowpass';lp2.frequency.value=460;
+    const padG=actx.createGain();padG.gain.value=0.03;
+    lp2.connect(padG);padG.connect(dest);
+    CHORDS.forEach(freqs=>{
+      const cg=actx.createGain();cg.gain.value=0;cg.connect(lp2);chordGains.push(cg);
+      freqs.forEach(f=>{
+        const o=actx.createOscillator();o.type='triangle';o.frequency.value=f;
+        o.detune.value=(Math.random()*8-4);
+        o.connect(cg);padOscs.push(o);
+      });
+    });
+  }
+  const mix=new MediaStream([...vStream.getVideoTracks(),...dest.stream.getAudioTracks()]);
+  const mime=pickMime();
+  const rec=new MediaRecorder(mix,{mimeType:mime,videoBitsPerSecond:8_000_000});
+  const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  const done=new Promise(res=>rec.onstop=res);
+
+  let wake=null;try{wake=await navigator.wakeLock?.request('screen');}catch(e){}
+
+  // FIX: Canvas VOR rec.start() einmal mit dem ersten Frame befüllen. Sonst nimmt YouTube (das oft
+  // den allerersten Frame als Short-Vorschau nutzt) einen leeren/schwarzen Frame, weil der eigentliche
+  // Zeichnen-Loop erst beim nächsten Browser-Paint-Tick nach rec.start() losläuft.
+  ctx2d.fillStyle='#050608';ctx2d.fillRect(0,0,W,H);
+  const firstSeg=segs[0];
+  if(firstSeg.type==='cover')drawCover(c,coverImg,0);
+  else if(firstSeg.type==='end')drawEndCard(c,coverImg,script.frage);
+  else{drawScene(sceneImgs[firstSeg.i],0,firstSeg.i%4);vignette();}
+  ctx2d.drawImage(grain,0,0,W,H);
+  drawHUD(c,0,dur);
+  if(firstSeg.type!=='end')drawCaptions(captionChunks,0);
+
+  rec.start(); // FIX: kein timeslice → korrekte Videodauer
+  await actx.resume();
+  const t0=actx.currentTime+0.15;
+  src.start(t0);
+  o1.start(t0);o2.start(t0);noise.start(t0);pulse.start(t0);
+  padOscs.forEach(o=>o.start(t0));
+  if(mood.pulse)for(let pt=mood.pulse;pt<dur-1;pt+=mood.pulse){ // Herzschlag-Puls
+    pGain.gain.setValueAtTime(0,t0+pt);
+    pGain.gain.linearRampToValueAtTime(0.05,t0+pt+0.06);
+    pGain.gain.exponentialRampToValueAtTime(0.0001,t0+pt+0.5);
+  }
+  if(chordGains.length){ // Akkordwechsel alle ~4,8s mit weichen Blenden
+    chordGains.forEach(cg=>cg.gain.setValueAtTime(0,t0));
+    for(let ct=0,ci=0;ct<dur-1.5;ct+=4.8,ci++){
+      chordGains.forEach((cg,k)=>cg.gain.linearRampToValueAtTime(k===ci%2?1:0,t0+ct+1.4));
+    }
+    chordGains.forEach(cg=>cg.gain.linearRampToValueAtTime(0,t0+dur+0.2));
+  }
+  droneGain.gain.setValueAtTime(droneBase,t0+Math.max(0,dur-1.2));
+  droneGain.gain.linearRampToValueAtTime(0.0001,t0+dur+0.3); // Fade-Out
+
+  // Gamechanger (Nutzer-Feedback via Gemini-Analyse): dezente, synthetisch erzeugte Whoosh-Effekte an jedem
+  // Szenen-/Faktenwechsel – steigert die wahrgenommene Spannung, ohne eine externe Sound-Datei zu brauchen.
+  function scheduleWhoosh(atTime){
+    const wNoise=actx.createBufferSource();
+    const buf=actx.createBuffer(1,Math.floor(actx.sampleRate*0.25),actx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length); // abklingendes Rauschen
+    wNoise.buffer=buf;
+    const wFilter=actx.createBiquadFilter();wFilter.type='bandpass';
+    wFilter.frequency.setValueAtTime(1800,atTime);
+    wFilter.frequency.exponentialRampToValueAtTime(300,atTime+0.22);
+    const wGain=actx.createGain();
+    wGain.gain.setValueAtTime(0,atTime);
+    wGain.gain.linearRampToValueAtTime(0.085,atTime+0.03);
+    wGain.gain.exponentialRampToValueAtTime(0.0001,atTime+0.25);
+    wNoise.connect(wFilter);wFilter.connect(wGain);wGain.connect(dest);
+    wNoise.start(atTime);wNoise.stop(atTime+0.26);
+  }
+  segs.forEach(s=>{if(s.type!=='cover')scheduleWhoosh(t0+s.start);});
+
+  await new Promise(res=>{
+    let fc=0;
+    function frame(){
+      const now=actx.currentTime-t0;
+      if(now>=dur+0.5){res();return;}
+      if(++fc%20===0)setStep('render','run',Math.min(99,Math.round(Math.max(0,now)/dur*100))+'%');
+      const nn=Math.max(0,now);
+      ctx2d.fillStyle='#050608';ctx2d.fillRect(0,0,W,H);
+      const seg=segs.find(s=>nn>=s.start&&nn<s.end)||segs[segs.length-1];
+      if(seg.type==='cover')drawCover(c,coverImg,nn);
+      else if(seg.type==='end')drawEndCard(c,coverImg,script.frage,nn-seg.start);
+      else{
+        const st=(nn-seg.start)/(seg.end-seg.start);
+        // Gamechanger: kurzer Zoom-Kick bei jedem Untertitel-Wechsel simuliert einen Schnitt,
+        // ohne dass wir mehr KI-Bilder pro Video generieren (und bezahlen/warten) müssen.
+        const activeChunk=captionChunks.find(cc=>nn>=cc.start&&nn<cc.end);
+        const punch=activeChunk?Math.max(0,1-((nn-activeChunk.start)/0.35))*0.05:0;
+        drawScene(sceneImgs[seg.i],st,seg.i%4,punch);
+        vignette();
+      }
+      ctx2d.drawImage(grain,0,0,W,H);
+      drawHUD(c,nn,dur);
+      if(seg.type!=='end')drawCaptions(captionChunks,nn);
+      requestAnimationFrame(frame);
+    }
+    frame();
+  });
+
+  rec.stop();await done;
+  try{src.stop()}catch(e){}
+  [o1,o2,noise,pulse,...padOscs].forEach(n=>{try{n.stop()}catch(e){}});
+  await actx.close();
+  // Gamechanger: Cover-Frame nochmal exakt gezeichnet und als JPEG eingefangen → wird direkt als YouTube-Thumbnail
+  // hochgeladen, statt dass YouTube selbst (oft unpassende) Frames vorschlägt und du manuell nachbessern musst.
+  // WICHTIG: Die YouTube-API akzeptiert Thumbnails nur bis 2 MB (unabhängig vom 50-MB-Limit der Studio-Oberfläche!) –
+  // deshalb hier mit sinkender Qualität nachkomprimieren, bis es sicher drunter liegt.
+  let thumbBlob=null;
+  try{
+    const coverSeg=segs.find(s=>s.type==='cover');
+    ctx2d.fillStyle='#050608';ctx2d.fillRect(0,0,W,H);
+    drawCover(c,coverImg,coverSeg?Math.min(1.8,Math.max(0.3,(coverSeg.end-coverSeg.start)-0.2)):1.8);
+    ctx2d.drawImage(grain,0,0,W,H);
+    for(const q of [0.9,0.75,0.6,0.45,0.3]){
+      const b=await new Promise(res=>stage.toBlob(res,'image/jpeg',q));
+      if(b&&b.size<1.8*1024*1024){thumbBlob=b;break;} // 1,8 MB Sicherheitsabstand zum 2-MB-API-Limit
+      if(b&&!thumbBlob)thumbBlob=b; // Notfalls die kleinste Stufe nehmen, auch wenn noch zu groß
+    }
+  }catch(e){}
+  new Set([coverImg,...sceneImgs]).forEach(b=>{try{b.close()}catch(e){}}); // FIX: ImageBitmap-Speicherleck, dedupliziert
+  try{wake?.release()}catch(e){}
+  const ext=mime.includes('mp4')?'mp4':'webm';
+  return {blob:new Blob(chunks,{type:mime||'video/webm'}),ext,dur,thumbBlob,alignment};
+}
+
+/* ---------------- KI-RECHERCHE: neue Fälle finden ---------------- */
+// Primärquelle: Wikipedia (kein Key, praktisch kein Rate-Limit, KI fasst nur zusammen statt frei zu erfinden – faktentreuer)
+const WIKI_SUCHBEGRIFFE=['ungeklärter Kriminalfall','ungeklärtes Verschwinden','vermisste Person nie gefunden','ungeklärter Todesfall','Cold Case Mordfall','mysteriöses Verschwinden','unidentifizierte Leiche','ungelöster Mordfall'];
+async function wikiKandidaten(){
+  const term=WIKI_SUCHBEGRIFFE[Math.floor(Math.random()*WIKI_SUCHBEGRIFFE.length)];
+  const off=Math.floor(Math.random()*40); // zufälliger Versatz für Abwechslung bei jedem Aufruf
+  const url='https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(term)+'&srlimit=15&sroffset='+off+'&format=json&origin=*';
+  const r=await retryFetch(url,{},2,'Wikipedia-Suche');
+  const j=await r.json();
+  const ytTitles=await getYtUploadedTitles();
+  const usedNames=[...CASES.map(c=>c.name.toLowerCase()),...ytTitles.map(t=>t.toLowerCase())];
+  const kandidaten=(j.query?.search||[]).map(x=>x.title).filter(t=>!usedNames.some(n=>n.includes(t.toLowerCase())||t.toLowerCase().includes(n)));
+  // Gamechanger: bekanntere Fälle bevorzugen (mehr organische Nachfrage → bessere Chance auf Viral-Reichweite),
+  // gemessen an echten Wikipedia-Abrufzahlen statt einer starren, irgendwann veralteten Liste bekannter Fälle.
+  try{return await sortiereNachPopularitaet(kandidaten.slice(0,10));}catch(e){return kandidaten;}
+}
+async function sortiereNachPopularitaet(titel){
+  const end=new Date();end.setDate(1);end.setDate(0); // letzter Tag des Vormonats
+  const start=new Date(end);start.setDate(1);
+  const fmt=d=>d.toISOString().slice(0,10).replace(/-/g,'');
+  const views=await Promise.all(titel.map(async t=>{
+    try{
+      const r=await fetch('https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/de.wikipedia/all-access/user/'+
+        encodeURIComponent(t.replace(/ /g,'_'))+'/monthly/'+fmt(start)+'/'+fmt(end));
+      if(!r.ok)return 0;
+      const j=await r.json();
+      return (j.items||[]).reduce((s,i)=>s+(i.views||0),0);
+    }catch(e){return 0;}
+  }));
+  return titel.map((t,i)=>({t,v:views[i]})).sort((a,b)=>b.v-a.v).map(x=>x.t);
+}
+async function wikiExtract(title){
+  const url='https://de.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles='+encodeURIComponent(title)+'&format=json&origin=*';
+  const r=await retryFetch(url,{},2,'Wikipedia-Auszug');
+  const j=await r.json();
+  const pages=j.query?.pages||{};
+  const page=Object.values(pages)[0];
+  return page?.extract||'';
+}
+async function aiFormatCase(title,extract){
+  const prompt=`Fasse den folgenden Wikipedia-Auszug über einen wahren, ungelösten/mysteriösen Kriminal- oder Vermisstenfall für den True-Crime-Kanal "SPURLOS" zusammen. NUTZE AUSSCHLIESSLICH Informationen aus diesem Text – erfinde NICHTS hinzu. Falls der Text kein True-Crime-Fall ist (z.B. ein Film, eine Serie, ein anderes Thema), antworte exakt mit: {"error":"kein Fall"}
+
+WICHTIG bei Ort UND Jahr: Manche Personen/Fälle haben MEHRERE Ereignisse an unterschiedlichen Orten/Jahren (z.B. ein späterer, unabhängiger Vorfall Jahre nach dem eigentlichen Fall). Nutze IMMER Ort+Jahr des HAUPTfalls/Kernereignisses (Verbrechen/Verschwinden/Tod, worum es in diesem Video geht) – nicht irgendein anderes Ereignis aus derselben Biografie. Prüfe, dass Ort und Jahr tatsächlich zusammengehören, bevor du antwortest.
+
+TITEL: ${title}
+WIKIPEDIA-AUSZUG:
+"""${extract.slice(0,3000)}"""
+
+Sonst antworte AUSSCHLIESSLICH mit validem JSON, ohne Markdown, exakt dieses Schema:
+{"name":"Name der Person/des Falls","ort":"Ort, Land (aus dem Text)","jahr":JAHRESZAHL (aus dem Text),"status":"UNGELÖST oder UNGEKLÄRT oder TEILGELÖST oder UMSTRITTEN","fakten":["Fakt 1 aus dem Text","Fakt 2","Fakt 3","Fakt 4"],"img":"kurzer englischer, fotorealistisch-dokumentarischer Bildprompt zur Szenerie – Erscheinung von Personen im Bild muss zu Herkunftsland/Jahrzehnt passen, NIEMALS ein erkennbares Porträt der echten Person (Silhouette/Rückenansicht/Detail statt Gesicht), kein Text im Bild"}`;
+  const tries=[
+    async()=>geminiScript(prompt),
+    async()=>fetchScriptRaw(0,prompt,Date.now()%100000),
+    async()=>fetchScriptRaw(1,prompt,Date.now()%100000)
+  ];
+  for(const t of tries){
+    try{
+      const txt=await t();
+      const js=repairJSON(txt);
+      if(js&&js.name&&!js.error)return js;
+    }catch(e){/* nächste Stufe */}
+  }
+  throw new Error('Fall-Formatierung: keine KI-Stufe lieferte ein verwertbares Ergebnis');
+}
+async function researchCaseWiki(){
+  const kandidaten=await wikiKandidaten();
+  if(!kandidaten.length)throw new Error('Wikipedia: keine neuen Kandidaten gefunden');
+  for(const title of kandidaten.slice(0,5)){ // mehrere probieren, falls einer nicht passt
+    try{
+      const extract=await wikiExtract(title);
+      if(extract.length<200)continue; // zu kurz, kein brauchbarer Fall
+      const js=await aiFormatCase(title,extract);
+      const newId=Math.max(0,...CASES.map(c=>c.id))+1;
+      const c={id:newId,name:js.name,ort:js.ort||'unbekannt',jahr:+js.jahr||new Date().getFullYear(),status:js.status||'UNGEKLÄRT',fakten:js.fakten.slice(0,5),img:js.img||(js.name+' true crime documentary scene, cinematic, no visible faces')};
+      CASES.push(c);S.extra=[...S.extra,c];
+      log('KI-Recherche ✓ (Wikipedia) neuer Fall: '+c.name+' ('+c.ort+', '+c.jahr+')','ok');
+      return c;
+    }catch(e){continue;}
+  }
+  throw new Error('Wikipedia: kein Kandidat lieferte einen verwertbaren Fall');
+}
+async function researchCase(){
+  try{return await researchCaseWiki();}
+  catch(e){log('Wikipedia-Recherche erfolglos ('+e.message+') → Ausweich-Stufe: Gemini + Google-Suche …','err');}
+  return await researchCaseGemini();
+}
+async function researchCaseGemini(){
+  const key=$('geminiKey').value.trim();
+  if(!key)throw new Error('KI-Recherche braucht einen Gemini-Key (Einstellungen → Gemini API-Key, gratis von aistudio.google.com)');
+  const ytTitles=await getYtUploadedTitles();
+  const usedNames=[...new Set([...CASES.map(c=>c.name),...ytTitles])].join(', ').slice(0,12000); // FIX: 3000 Zeichen reichten bei 100+ Fällen nicht annähernd – Gemini sah nur die ersten ~90 Namen der Ausschlussliste, alles danach (u.a. teils schon gemachte Fälle) fehlte einfach. Zusätzlich dedupliziert (CASES/ytTitles überschneiden sich mittlerweile stark).
+  const prompt=`Du bist Recherche-Assistent für den deutschen True-Crime-YouTube-Kanal "SPURLOS". Finde per Websuche EINEN realen, gut dokumentierten ungelösten oder mysteriösen Fall (Vermisstenfall, ungeklärter Todesfall, Cold Case, unerklärliches Verschwinden).
+
+NICHT verwenden, diese Fälle wurden bereits recherchiert oder als Video hochgeladen: ${usedNames}
+
+ANFORDERUNGEN:
+- Muss ein echter, überprüfbarer Fall sein (recherchierbar über Wikipedia/seriöse Nachrichtenquellen), niemals erfinden
+- International, nicht nur USA – auch Europa, Asien, Südamerika etc. sind willkommen
+- Gut genug dokumentiert für 4 knappe, korrekte Fakten
+- Ort+Jahr müssen exakt zum HAUPTereignis (Verbrechen/Verschwinden/Tod) gehören – falls die Person mehrere Vorfälle an unterschiedlichen Orten/Jahren hatte, NICHT verwechseln, nur das Kernereignis zählt
+
+Antworte AUSSCHLIESSLICH mit validem JSON, ohne Markdown, exakt dieses Schema:
+{"name":"Name der Person/des Falls","ort":"Ort, Land","jahr":JAHRESZAHL,"status":"UNGELÖST oder UNGEKLÄRT oder TEILGELÖST oder UMSTRITTEN","fakten":["Fakt 1","Fakt 2","Fakt 3","Fakt 4"],"img":"kurzer englischer, fotorealistisch-dokumentarischer Bildprompt zur Szenerie – Erscheinung von Personen im Bild muss zu Herkunftsland/Jahrzehnt passen, NIEMALS ein erkennbares Porträt der echten Person (Silhouette/Rückenansicht/Detail statt Gesicht), kein Text im Bild"}`;
+  const r=await retryFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent',{
+    method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],tools:[{google_search:{}}]})
+  },2,'KI-Recherche (Gemini + Google-Suche)');
+  const j=await r.json();
+  const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  const js=repairJSON(txt);
+  if(!js||!js.name||!Array.isArray(js.fakten)||js.fakten.length<3)throw new Error('KI-Recherche: Antwort unbrauchbar, kein verwertbarer Fall gefunden');
+  const newId=Math.max(0,...CASES.map(c=>c.id))+1;
+  const c={id:newId,name:js.name,ort:js.ort||'unbekannt',jahr:+js.jahr||new Date().getFullYear(),status:js.status||'UNGEKLÄRT',fakten:js.fakten.slice(0,5),img:js.img||(js.name+' true crime documentary scene, cinematic, no visible faces')};
+  CASES.push(c);
+  S.extra=[...S.extra,c];
+  log('KI-Recherche ✓ neuer Fall: '+c.name+' ('+c.ort+', '+c.jahr+')','ok');
+  return c;
+}
+
+/* ---------------- PRODUKTION ---------------- */
+async function pickCase(){
+  // Nur noch KI-Recherche – kein Archiv/Auswahl-Modus mehr. Reine Notfall-Absicherung darunter,
+  // falls die Recherche wirklich mal komplett ausfällt (kein manueller Modus, läuft automatisch mit).
+  log('KI recherchiert einen neuen Fall im Internet …');
+  try{return await researchCase();}
+  catch(e){
+    log('KI-Recherche fehlgeschlagen ('+e.message+') – suche einen noch nicht hochgeladenen Fall aus dem lokalen Verlauf …','err');
+    const done=S.done;
+    const fresh=CASES.filter(c=>!done.includes(c.id));
+    // FIX: früher fiel dies bei leerem "fresh" auf die GESAMTE CASES-Liste zurück (inkl. längst hochgeladener
+    // Fälle) → garantiertes Duplikat. Ohne echten neuen Fall lieber dieses Video überspringen (Batch läuft
+    // mit dem nächsten weiter) statt wissentlich einen bereits veröffentlichten Fall erneut hochzuladen.
+    if(!fresh.length)throw new Error('Kein neuer Fall verfügbar: KI-Recherche fehlgeschlagen und alle lokal bekannten Fälle sind bereits hochgeladen – Video wird übersprungen statt ein Duplikat zu erzeugen');
+    return fresh[Math.floor(Math.random()*fresh.length)];
+  }
+}
+async function produceOne(n,ofN){
+  const c=await pickCase();
+  const hook=HOOKS[S.hookIdx%HOOKS.length];S.hookIdx=S.hookIdx+1;
+  $('hookTag').textContent='HOOK: '+hook.tag;
+  resetSteps();
+  log('── AKTE #'+String(c.id).padStart(3,'0')+' · '+c.name+' ('+n+'/'+ofN+') ──');
+  setBar(0.05);setStep('skript','run');
+  log('Schreibe Skript · Hook-Stil: '+hook.tag+' …');
+  let script=await generateScriptRobust(c,hook);
+  script.hookTag=hook.tag; // für spätere Performance-Auswertung: welcher Hook-Stil steckt in diesem Video
+  script=enforceWordBudget(script,78); // FIX: harte Kappung – KI hält Wortlimit nicht immer zuverlässig ein
+  setStep('skript','done');
+  log('Atmosphäre (KI-Wahl): '+(script.stimmung||'mysterioes'),'ok');
+  log('Skript ✓ ('+(script.hook+' '+script.szenen.map(s=>s.text).join(' ')+' '+script.frage).split(/\s+/).length+' Wörter)','ok');
+  setBar(0.2);
+  const narration=[script.hook,...script.szenen.map(s=>s.text),script.frage].join(' ');
+  log('Stimme + '+(script.szenen.length+1)+' Bilder parallel …');
+  setStep('stimme','run');setStep('bilder','run','0/'+(script.szenen.length+1));
+  const [audio,imgs]=await Promise.all([
+    tts(narration).then(a=>{setStep('stimme','done');return a;}),
+    loadImages(c,script).then(i=>{setStep('bilder','done');return i;})
+  ]);
+  setBar(0.72);setStep('render','run');
+  log('Rendere Video in Echtzeit (Bildschirm anlassen!) …');
+  const vid=await renderVideo(c,script,audio,imgs.cover,imgs.scenes);
+  setStep('render','done');setBar(1);
+  log('Video ✓ '+vid.dur.toFixed(1)+'s · '+(vid.blob.size/1048576).toFixed(1)+' MB','ok');
+  S.done=[...S.done,c.id];
+  fillCases();
+  addResult(c,script,vid);
+}
+function addResult(c,script,vid){
+  resultCount++;$('resultsSec').style.display='block';$('dock').style.display='block';
+  $('resCount').textContent=resultCount+' VIDEO'+(resultCount>1?'S':'');
+  const url=URL.createObjectURL(vid.blob);
+  const fname='SPURLOS_'+c.name.replace(/[^a-zA-Z0-9äöüÄÖÜß]+/g,'-')+'_'+Date.now()+'.'+vid.ext;
+  const div=document.createElement('div');div.className='result';
+  const tags=(script.hashtags||[]).join(' ');
+  div.innerHTML=`
+    <video src="${url}" controls playsinline preload="metadata"></video>
+    <button class="dl">⬇ VIDEO SPEICHERN (${vid.ext.toUpperCase()})</button>
+    <div class="meta">
+      ${metaRow('Titel',script.titel)}
+      ${metaRow('SEO-Titel',script.seo_titel)}
+      ${metaRow('Beschreibung',(script.beschreibung||'')+'\n\n'+tags)}
+      ${metaRow('Hashtags',tags)}
+      ${metaRow('Kommentar anpinnen',script.frage)}
+    </div>`;
+  div.querySelector('.dl').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=fname;a.click();};
+  div.querySelectorAll('.copy').forEach(b=>b.onclick=()=>{
+    navigator.clipboard.writeText(b.dataset.v).then(()=>{b.textContent='✓';setTimeout(()=>b.textContent='Kopieren',1200);});
+  });
+  $('results').prepend(div);
+  if($('ytAutoUpload').checked){
+    if(!ytAccessToken)log('YouTube-Upload übersprungen: nicht verbunden – bitte "Mit Google verbinden" klicken','err');
+    else{
+      const publishAt=scheduleQueue.length?scheduleQueue.shift():null;
+      updatePlannerBadge();
+      if(publishAt)log('📅 Geplant für '+publishAt.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' Uhr (YouTube veröffentlicht automatisch)');
+      uploadToYouTube(c,script,vid,undefined,publishAt).catch(e=>log('YouTube-Upload fehlgeschlagen: '+e.message,'err'));
+    }
+  }
+  // Speicher-Fix: Blob-URL nach 3 Min. freigeben (Download + YouTube-Upload sind dann längst fertig).
+  // Ohne das sammeln sich bei langen Batches (10-20 Videos) alle Video-Dateien unbegrenzt im RAM –
+  // genau das würde bei einem großen Batch am ehesten mitten im Lauf den Tab zum Absturz bringen.
+  setTimeout(()=>{
+    try{
+      URL.revokeObjectURL(url);
+      const v=div.querySelector('video');if(v){v.removeAttribute('src');v.load();}
+      const dl=div.querySelector('.dl');if(dl){dl.disabled=true;dl.textContent='⬇ Vorschau abgelaufen (bereits gespeichert/hochgeladen)';}
+    }catch(e){}
+  },180000);
+}
+function metaRow(lbl,val){
+  const esc=(val||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  return `<div class="m-row"><div class="m-lbl"><span>${lbl}</span><button class="copy" data-v="${esc}">Kopieren</button></div><div class="m-val">${esc}</div></div>`;
+}
+
+async function runBatch(){
+  if(busy)return;busy=true;
+  $('batchDone').style.display='none';
+  if('Notification' in window&&Notification.permission==='default'){try{await Notification.requestPermission();}catch(e){}}
+  $('produceBtn').disabled=true;$('produceBtn').textContent='⏳ PRODUKTION LÄUFT …';
+  S.k=$('elKey').value.trim();S.voice=$('voiceSelect').value;S.cvoice=$('customVoice').value.trim();S.gemini=$('geminiKey').value.trim();S.polli=$('polliKey').value.trim();S.groq=$('groqKey').value.trim();S.cfAcc=$('cfAccountId').value.trim();S.cfTok=$('cfApiToken').value.trim();
+  if($('auditSummary').textContent.includes('Problem'))log('⚠️ Hinweis: System-Check meldet ein Problem – siehe 🩺 oben. Produktion läuft trotzdem, nutzt ggf. Fallbacks.','err');
+  try{
+    let okCount=0;
+    for(let i=1;i<=batchN;i++){
+      document.title=i+'/'+batchN+' · SPURLOS'; // Gamechanger: Fortschritt im Tab-Titel sichtbar, auch im Hintergrund
+      try{navigator.setAppBadge?.(batchN-i+1);}catch(e){}
+      try{
+        await produceOne(i,batchN);okCount++;
+      }catch(e){
+        console.error(e);
+        log('Video '+i+'/'+batchN+' fehlgeschlagen: '+e.message,'err');
+        if(i<batchN)log('Batch läuft mit dem nächsten Video weiter …');
+      }
+      if(i<batchN){log('10s Abkühlpause fürs Rate-Limit …');await sleep(10000);}
+    }
+    log('══ FERTIG · '+okCount+'/'+batchN+' Video(s) erfolgreich ══',okCount?'ok':'err');
+    document.title='SPURLOS · Akten-Generator';
+    // Gamechanger: unübersehbarer Fertig-Banner statt nur einer Log-Zeile, plus Push-Benachrichtigung
+    // (falls App im Hintergrund/Bildschirm aus war) und kurze Vibration als haptisches Feedback.
+    const db=$('batchDone');
+    db.className='stamp-slam-banner'+(okCount<batchN?' warn':'');
+    db.textContent=(okCount===batchN?'✓ FERTIG · ':'⚠ FERTIG MIT FEHLERN · ')+okCount+'/'+batchN+' Video(s) erfolgreich';
+    db.style.display='block';
+    void db.offsetWidth;db.style.animation='none';void db.offsetWidth;db.style.animation='';
+    try{navigator.vibrate?.(okCount===batchN?[80,60,80]:[200]);}catch(e){}
+    if('Notification' in window&&Notification.permission==='granted'){
+      try{new Notification('SPURLOS – Batch fertig',{body:okCount+'/'+batchN+' Video(s) erfolgreich produziert & hochgeladen',icon:'icon-192.png'});}catch(e){}
+    }
+    updatePlannerBadge(); // Badge wieder auf verbleibende geplante Termine zurücksetzen (falls Ziel-Planer aktiv)
+  }catch(e){
+    console.error(e);log('FEHLER: '+e.message,'err');
+    log('Tipp: erneut versuchen – meist reicht ein zweiter Anlauf.','err');
+    document.title='SPURLOS · Akten-Generator';
+  }
+  $('produceBtn').disabled=false;$('produceBtn').textContent='▶ FALL PRODUZIEREN';
+  busy=false;
+}
+
+/* ---------------- UI-WIRING ---------------- */
+function fillCases(){
+  // Kein Archiv/Auswahl mehr – der versteckte select-Wert bleibt fest auf 'research'.
+  $('caseSelect').innerHTML='<option value="research" selected>research</option>';
+  $('dbCount').textContent='🔍 KI-Recherche aktiv';
+}
+let shownCase=null;
+function showEmptyCase(){
+  shownCase=null;
+  $('cNr').textContent='🔍 KI-RECHERCHE';$('cName').textContent='Fall wird beim Produzieren live im Internet gesucht';
+  $('cMeta').textContent='—';$('cStamp').textContent='';$('cFacts').innerHTML='';
+}
+function showCase(c){
+  if(!c){showEmptyCase();return;}
+  shownCase=c;
+  const isDone=S.done.includes(c.id);
+  $('toggleDone').textContent=isDone?'↺ Als OFFEN markieren (aktuell: ✓ produziert)':'✓ Als PRODUZIERT markieren (aktuell: offen)';
+  $('cNr').textContent='AKTE #'+String(c.id).padStart(3,'0')+(isDone?' · ✓':'');
+  $('cName').textContent=c.name;
+  $('cMeta').textContent=c.ort+' · '+c.jahr;
+  $('cStamp').textContent=c.status;
+  const st=$('cStamp');st.classList.remove('slam');void st.offsetWidth;st.classList.add('slam');
+  $('cFacts').innerHTML=c.fakten.map(f=>'<li>'+f+'</li>').join('');
+}
+$('batchSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('batchSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');batchN=+b.dataset.n;
+  $('plannerSummary').textContent='optional';
+});
+let scheduleQueue=[];
+function buildScheduleQueue(startDate,days,perDay,total){
+  const t1=$('planTime1').value||'11:30',t2=$('planTime2').value||'18:00';
+  const times=perDay===1?[t1]:[t1,t2];
+  const queue=[],now=new Date();
+  for(let d=0;d<days&&queue.length<total*2;d++){
+    const day=new Date(startDate);day.setDate(day.getDate()+d);
+    for(let k=0;k<perDay;k++){
+      const [hh,mm]=(times[k%times.length]||'11:30').split(':').map(Number);
+      const slot=new Date(day.getFullYear(),day.getMonth(),day.getDate(),hh,mm,0,0);
+      if(slot>now)queue.push(slot);
+    }
+  }
+  queue.sort((a,b)=>a-b);
+  return queue.slice(0,total);
+}
+function updatePlannerBadge(){
+  if(!scheduleQueue.length){try{navigator.clearAppBadge?.();}catch(e){}return;}
+  const fmt=d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  $('plannerSummary').textContent=fmt(scheduleQueue[0])+' → '+fmt(scheduleQueue[scheduleQueue.length-1])+' · '+scheduleQueue.length+' geplant';
+  try{navigator.setAppBadge?.(scheduleQueue.length);}catch(e){} // Gamechanger: Anzahl geplanter Videos direkt am App-Icon sichtbar
+}
+async function loadPerformance(){
+  if(!ytAccessToken){log('Performance: bitte zuerst oben "Mit Google verbinden" klicken','err');return;}
+  const btn=$('perfLoad');btn.disabled=true;btn.textContent='⏳ Lädt …';
+  const list=$('perfList');list.innerHTML='';
+  try{
+    const end=new Date(),start=new Date();start.setDate(start.getDate()-30);
+    const fmt=d=>d.toISOString().slice(0,10);
+    const url='https://youtubeanalytics.googleapis.com/v2/reports?ids=channel%3D%3DMINE&startDate='+fmt(start)+'&endDate='+fmt(end)+
+      '&metrics=views,averageViewPercentage,likes,comments&dimensions=video&sort=-views&maxResults=15';
+    const r=await fetch(url,{headers:{'Authorization':'Bearer '+ytAccessToken}});
+    if(!r.ok)throw new Error('HTTP '+r.status+' – '+(await r.text()).slice(0,150));
+    const j=await r.json();
+    const rows=j.rows||[];
+    if(!rows.length){list.innerHTML='<div class="hint">Noch keine Daten für die letzten 30 Tage (Videos brauchen ein paar Tage, bis Analytics-Zahlen erscheinen).</div>';$('perfStatus').textContent='keine Daten';btn.disabled=false;btn.textContent='📊 Performance laden';return;}
+    // Video-Titel + Beschreibung (für Hook-Tag) per Data API nachladen (Analytics liefert nur IDs)
+    const ids=rows.map(row=>row[0]).join(',');
+    const vr=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&id='+ids,{headers:{'Authorization':'Bearer '+ytAccessToken}});
+    const vj=await vr.json();
+    const meta={};(vj.items||[]).forEach(v=>{
+      const desc=v.snippet.description||'';
+      const hm=desc.match(/\[spurlos-hook:\s*([^\]]+)\]/);
+      meta[v.id]={titel:v.snippet.title,hook:hm?hm[1].trim():null};
+    });
+    // Retentionskurve pro Video: audienceWatchRatio bei ~10% (Hook-Überlebensrate) und ~90% (bis-zum-Ende-Rate).
+    // Zeigt konkret, OB und WO Leute abspringen – nicht nur den nackten Durchschnitt.
+    const curves=await Promise.all(rows.map(async row=>{
+      const id=row[0];
+      try{
+        const cu='https://youtubeanalytics.googleapis.com/v2/reports?ids=channel%3D%3DMINE&startDate='+fmt(start)+'&endDate='+fmt(end)+
+          '&metrics=audienceWatchRatio&dimensions=elapsedVideoTimeRatio&filters=video=='+id;
+        const cr=await fetch(cu,{headers:{'Authorization':'Bearer '+ytAccessToken}});
+        if(!cr.ok)return null;
+        const cj=await cr.json();
+        const pts=(cj.rows||[]).map(r=>({x:r[0],y:r[1]}));
+        if(!pts.length)return null;
+        const nearest=x=>pts.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);
+        return {hook:nearest(0.1).y,ende:nearest(0.9).y};
+      }catch(e){return null;}
+    }));
+    list.innerHTML=rows.map((row,idx)=>{
+      const [id,views,retention,likes,comments]=row;
+      const m=meta[id]||{};const curve=curves[idx];
+      const curveHtml=curve?' · 🎣 Hook-Überleben (10%): '+Math.round(curve.hook*100)+'% · 🏁 Bis Ende (90%): '+Math.round(curve.ende*100)+'%':'';
+      const hookHtml=m.hook?' <span class="tag" style="margin-left:6px">'+m.hook+'</span>':'';
+      return '<div class="akte" style="margin-top:8px;padding:12px">'+
+        '<div style="font:600 15px system-ui,sans-serif;color:#F2EEE4;margin-bottom:6px">'+(m.titel||id)+hookHtml+'</div>'+
+        '<div class="akte-meta">👁 '+views+' Views · ⏱ Ø '+Math.round(retention)+'% Sehdauer · 👍 '+likes+' · 💬 '+comments+curveHtml+'</div></div>';
+    }).join('');
+    $('perfStatus').textContent=rows.length+' Videos (30 Tage)';
+    log('📊 Performance geladen: Top-'+rows.length+' Videos der letzten 30 Tage','ok');
+  }catch(e){
+    list.innerHTML='<div class="hint">Fehler beim Laden: '+e.message+'</div>';
+    log('Performance-Laden fehlgeschlagen: '+e.message,'err');
+  }
+  btn.disabled=false;btn.textContent='📊 Performance laden';
+}
+$('perfLoad').onclick=loadPerformance;
+$('planApply').onclick=()=>{
+  const dateVal=$('planDate').value;
+  const perDay=Math.max(1,Math.min(4,+$('planPerDay').value||2));
+  if(!dateVal){log('Ziel-Planer: bitte zuerst ein Datum wählen','err');return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const startVal=$('planStartDate').value;
+  let start=startVal?new Date(startVal+'T00:00:00'):today;
+  if(start<today)start=today; // Sicherheit: nicht in der Vergangenheit starten
+  const target=new Date(dateVal+'T00:00:00');
+  const days=Math.max(1,Math.round((target-start)/86400000)+1); // inklusive Start-Tag
+  let total=days*perDay;
+  const capped=total>30;
+  if(capped)total=30; // Sicherheitsdeckel: nicht versehentlich 100+ Videos in einem Rutsch anstoßen
+  batchN=total;
+  $('batchSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  if($('planSchedule').checked){
+    scheduleQueue=buildScheduleQueue(start,days,perDay,total);
+    const fmt=d=>d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    updatePlannerBadge();
+    log('🎯 Ziel-Planer: '+total+' Video(s) übernommen, '+scheduleQueue.length+' YouTube-Veröffentlichungstermine geplant ('+(scheduleQueue[0]?fmt(scheduleQueue[0]):'-')+' bis '+(scheduleQueue[scheduleQueue.length-1]?fmt(scheduleQueue[scheduleQueue.length-1]):'-')+').','ok');
+  }else{
+    scheduleQueue=[];
+    $('plannerSummary').textContent=days+' Tag'+(days>1?'e':'')+' × '+perDay+'/Tag = '+total+' Video'+(total>1?'s':'')+(capped?' (auf 30 gedeckelt)':'');
+    log('🎯 Ziel-Planer: '+total+' Video(s) für die Batch-Produktion übernommen (ohne Zeitplan, sofort live).','ok');
+  }
+};
+$('voiceSelect').onchange=()=>{$('customVoiceWrap').style.display=$('voiceSelect').value==='custom'?'block':'none';};
+$('testVoice').onclick=async()=>{
+  $('testVoice').disabled=true;$('testVoice').textContent='⏳ …';
+  try{
+    const {buf}=await tts('Spurlos. Wahre Fälle, die niemand erklären kann.');
+    const a=new Audio(URL.createObjectURL(new Blob([buf],{type:'audio/mpeg'})));a.play();
+  }catch(e){alert('Stimmprobe fehlgeschlagen: '+e.message);}
+  $('testVoice').disabled=false;$('testVoice').textContent='🔊 Stimmprobe';
+};
+$('toggleDone').onclick=()=>{
+  if(!shownCase)return;
+  const d=S.done;
+  S.done=d.includes(shownCase.id)?d.filter(x=>x!==shownCase.id):[...d,shownCase.id];
+  fillCases();showCase(shownCase);
+};
+$('produceBtn').onclick=runBatch;
+$('auditBtn').onclick=runAudit;
+// Fix: Keys sofort beim Tippen speichern, nicht erst beim Produzieren – sonst gehen sie bei Reload verloren, obwohl sie "eingetragen" aussahen
+[['elKey','k'],['geminiKey','gemini'],['groqKey','groq'],['polliKey','polli'],['hfKey','hf'],['cfAccountId','cfAcc'],['cfApiToken','cfTok'],['ytClientId','ytClient']].forEach(([id,skey])=>{
+  $(id).addEventListener('input',()=>{S[skey]=$(id).value.trim();});
+});
+$('ytAutoUpload').addEventListener('change',()=>{S.ytAuto=$('ytAutoUpload').checked;});
+$('ytPrivacy').addEventListener('change',()=>{S.ytPrivacy=$('ytPrivacy').value;});
+$('ytConnect').onclick=()=>{
+  const cid=$('ytClientId').value.trim();
+  if(!cid){log('YouTube: bitte zuerst die Google OAuth Client-ID eintragen','err');return;}
+  S.ytClient=cid;
+  ytTokenClient=ytInitTokenClient();
+  if(!ytTokenClient){log('YouTube: Google-Bibliothek noch nicht geladen oder Client-ID fehlt – kurz warten und nochmal versuchen','err');return;}
+  ytTokenClient.requestAccessToken();
+};
+$('dockNew').onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});};
+$('dockTop').onclick=()=>$('resultsSec').scrollIntoView({behavior:'smooth'});
+
+/* Init */
+{const extra=S.extra;if(extra.length){const ids=new Set(CASES.map(c=>c.id));extra.forEach(c=>{if(!ids.has(c.id)){CASES.push(c);ids.add(c.id);}});}}
+fillCases();
+$('elKey').value=S.k;$('voiceSelect').value=S.voice;$('geminiKey').value=S.gemini;$('groqKey').value=S.groq;$('polliKey').value=S.polli;$('hfKey').value=S.hf;$('cfAccountId').value=S.cfAcc;$('cfApiToken').value=S.cfTok;
+$('ytClientId').value=S.ytClient;$('ytAutoUpload').checked=S.ytAuto;$('ytPrivacy').value=S.ytPrivacy;
+if(![...$('voiceSelect').options].some(o=>o.value===S.voice))$('voiceSelect').value='onwK4e9ZLuTAKqWW03F9';
+$('customVoice').value=S.cvoice;
+$('voiceSelect').onchange();
+$('caseSelect').value='research'; // Standard: KI recherchiert jeden Fall live, kein festes Archiv mehr
+showCase(CASES.length?CASES[Math.floor(Math.random()*CASES.length)]:null);
+$('hookTag').textContent='HOOK: '+HOOKS[S.hookIdx%HOOKS.length].tag;
+runAudit(); // Automatischer System-Check beim Start, damit tote Keys sofort auffallen statt erst nach Tagen
+
+// Gamechanger: App-Verknüpfungen (Langes Drücken auf Icon) springen direkt zum richtigen Bereich.
+const shortcutAction=new URLSearchParams(location.search).get('action');
+if(shortcutAction==='produce')$('produceBtn')?.scrollIntoView({behavior:'smooth',block:'center'});
+else if(shortcutAction==='audit')$('auditSec')?.scrollIntoView({behavior:'smooth',block:'start'});
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
